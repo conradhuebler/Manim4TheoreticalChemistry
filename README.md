@@ -2,7 +2,7 @@
 
 ## Übersicht
 
-Dieses Projekt enthält Animationen für die Vorlesung "Theoretische Chemie" zur Born-Oppenheimer-Näherung bei der H₂-Molekülbildung.
+Dieses Projekt enthält Animationen für eine Vorlesung zur theoretischen Chemie und Molekülmodellierung. Die Szenarien sind größtenteils mit Claude Code entwickelt!
 
 ## Dateien
 
