@@ -78,18 +78,79 @@ def get_string(key):
 
 
 class NonbondedInteractions(Scene):
-    def construct(self):
-        # Lennard-Jones parameters (typical C-C interaction)
-        self.epsilon = 0.086  # kcal/mol - well depth
-        self.sigma = 3.40     # Å - zero-crossing distance
-        self.r_min = self.sigma * (2 ** (1/6))  # Minimum energy distance
+    """Non-bonded interactions: Lennard-Jones V = 4ε[(σ/r)¹²-(σ/r)⁶] + Coulomb V = kq₁q₂/r."""
 
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Lennard-Jones parameters
+        "epsilon": {
+            "value": 0.086,
+            "type": float,
+            "unit": "kcal/mol",
+            "description": "Lennard-Jones well depth (typical C-C interaction)",
+            "min": 0.01,
+            "max": 1.0
+        },
+        "sigma": {
+            "value": 3.40,
+            "type": float,
+            "unit": "Å",
+            "description": "Lennard-Jones zero-crossing distance",
+            "min": 2.0,
+            "max": 5.0
+        },
         # Coulomb parameters
-        self.k_coulomb = 332.1  # kcal·Å/(mol·e²)
-
+        "k_coulomb": {
+            "value": 332.1,
+            "type": float,
+            "unit": "kcal·Å/(mol·e²)",
+            "description": "Coulomb constant for electrostatic interactions",
+            "min": 100.0,
+            "max": 500.0
+        },
         # Animation parameters
-        self.r_start = 6.0  # Å
-        self.r_end = 2.5    # Å
+        "r_start": {
+            "value": 6.0,
+            "type": float,
+            "unit": "Å",
+            "description": "Starting distance between atoms",
+            "min": 4.0,
+            "max": 10.0
+        },
+        "r_end": {
+            "value": 2.5,
+            "type": float,
+            "unit": "Å",
+            "description": "Final distance between atoms",
+            "min": 1.5,
+            "max": 4.0
+        },
+        "duration": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Duration per phase animation",
+            "min": 5.0,
+            "max": 30.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
+        }
+    }
+
+    def construct(self):
+        # Extract parameters from central dictionary
+        self.epsilon = self.PARAMETERS["epsilon"]["value"]
+        self.sigma = self.PARAMETERS["sigma"]["value"]
+        self.r_min = self.sigma * (2 ** (1/6))  # Calculated from sigma
+        self.k_coulomb = self.PARAMETERS["k_coulomb"]["value"]
+        self.r_start = self.PARAMETERS["r_start"]["value"]
+        self.r_end = self.PARAMETERS["r_end"]["value"]
 
         # Setup layout
         self.setup_layout()
@@ -471,8 +532,9 @@ class NonbondedInteractions(Scene):
 
     def animate_approach(self):
         """Animate atoms approaching from far to close contact"""
-        duration = 10.0  # seconds
-        fps = 30
+        # Get animation parameters from central dictionary
+        duration = self.PARAMETERS["duration"]["value"]
+        fps = self.PARAMETERS["fps"]["value"]
         frames = int(duration * fps)
 
         # Determine which potential function to use
