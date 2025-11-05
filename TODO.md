@@ -45,7 +45,7 @@ class MyAnimation(Scene):
 | `h3_reaction_pathway.py` | ✅ | Class-level `PARAMETERS` dictionary | 9 Parameter: D_e, r_e, alpha, mass, temperature, dt, x_h1, x_h3, x_h2_initial |
 | `geometry_optimization.py` | ✅ | Class-level `PARAMETERS` dictionary | 9 Parameter: x_min, x_max, convergence_threshold, max_iterations, max_step_size, lm_lambda, backtrack_alpha, backtrack_c, max_backtrack_iter |
 | `quantum_dynamics_manim.py` | ✅ | Class-level `PARAMETERS` dictionary | 10 Parameter: active_scenario, length, mass, width, npoints, dt, snapshot_freq, fps, x_plot_range, vis_downsample |
-| `quantum_nonlocality.py` | ❌ | Zu prüfen | - |
+| `quantum_nonlocality.py` | ✅ | Class-level `PARAMETERS` dictionary | 1 Parameter: box_length |
 | `variational_method.py` | ❌ | Zu prüfen | - |
 
 ### Monte Carlo & Sampling
@@ -69,13 +69,13 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 13 Dateien (68.4%)
+- **Konform (✅):** 14 Dateien (73.7%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 6 Dateien (31.6%)
+- **Nicht konform (❌):** 5 Dateien (26.3%)
 
 **🎉 Forcefield Animation Series: 5/5 KOMPLETT!**
 **🎉 Monte Carlo & Sampling: 4/4 KOMPLETT!**
-**📊 Molecular Dynamics & Quantum: 4/6**
+**📊 Molecular Dynamics & Quantum: 5/6**
 
 ## Nächste Schritte
 
@@ -205,6 +205,37 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - quantum_nonlocality.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 1 Parameter vollständig strukturiert
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ Parameter-Extraktion in construct() direkt aus PARAMETERS
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: 1/1 Parameter komplett, GUI-kompatibel
+
+**Parameter:**
+- 1 Physical: box_length (L for particle-in-a-box, 0 to L)
+
+**Besonderheiten:**
+- Educational animation: classical → hybrid → full quantum description
+- Quantum non-locality and entanglement visualization
+- Transitions through 4 scenes:
+  * Scene 1: Classical 2-particle system (2 point particles in boxes)
+  * Scene 2: Hybrid (1 classical point + 1 QM wavefunction)
+  * Scene 3: Full QM (both particles as wavefunctions)
+  * Scene 4: Entanglement (non-separable 2D wavefunction)
+- Coin analogy for correlation vs. uncorrelated distributions
+- 2D heatmap visualization of |ψ(x,y)|²
+- Demonstrates separable vs. entangled states
+- Marginal distributions showing rank-1 (separable) vs. higher rank (entangled)
+- Minimal parameters: primarily didactic, fixed choreography
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
+
+**📊 Gesamt: 14/19 (73.7%)**
 
 ### 2025-11-05 - quantum_dynamics_manim.py refactored ✅
 
