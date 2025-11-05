@@ -100,6 +100,62 @@ def get_string(key):
     return STRINGS[LANGUAGE][key]
 
 class MonteCarloPI(Scene):
+    """Monte Carlo π calculation using random point sampling."""
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Simulation parameters
+        "total_samples": {
+            "value": 5000,
+            "type": int,
+            "unit": "points",
+            "description": "Total number of random points to generate",
+            "min": 100,
+            "max": 50000
+        },
+        "batch_size": {
+            "value": 10,
+            "type": int,
+            "unit": "points/frame",
+            "description": "Number of points to add per animation frame",
+            "min": 1,
+            "max": 100
+        },
+        "animation_speed": {
+            "value": 0.1,
+            "type": float,
+            "unit": "s",
+            "description": "Time between batches (wait time per frame)",
+            "min": 0.01,
+            "max": 1.0
+        },
+        "max_displayed_points": {
+            "value": 500,
+            "type": int,
+            "unit": "points",
+            "description": "Maximum points to display simultaneously (performance limit)",
+            "min": 100,
+            "max": 2000
+        },
+        # Geometric parameters (usually fixed)
+        "square_size": {
+            "value": 2.0,
+            "type": float,
+            "unit": "-",
+            "description": "Size of square containing circle (2×2: -1 to +1)",
+            "min": 1.0,
+            "max": 4.0
+        },
+        "circle_radius": {
+            "value": 1.0,
+            "type": float,
+            "unit": "-",
+            "description": "Radius of unit circle",
+            "min": 0.5,
+            "max": 2.0
+        }
+    }
+
     def construct(self):
         # Initialize Monte Carlo parameters
         self.setup_monte_carlo_parameters()
@@ -115,24 +171,25 @@ class MonteCarloPI(Scene):
 
         # Transition to simulation
         self.transition_to_simulation()
-        
+
         # Run Monte Carlo simulation
         self.run_monte_carlo_simulation()
 
         self.wait(2)
 
     def setup_monte_carlo_parameters(self):
-        """Setup Monte Carlo simulation parameters"""
+        """Setup Monte Carlo simulation parameters from central dictionary"""
 
         # Mathematical constants
         self.pi_theoretical = np.pi
-        self.square_size = 2.0  # 2×2 square from -1 to +1
-        self.circle_radius = 1.0  # Unit circle
 
-        # Simulation parameters
-        self.total_samples = 5000  # Total points to generate
-        self.batch_size = 10  # Points per animation frame
-        self.animation_speed = 0.1  # Time between batches (seconds)
+        # Extract parameters from central dictionary
+        self.square_size = self.PARAMETERS["square_size"]["value"]
+        self.circle_radius = self.PARAMETERS["circle_radius"]["value"]
+        self.total_samples = self.PARAMETERS["total_samples"]["value"]
+        self.batch_size = self.PARAMETERS["batch_size"]["value"]
+        self.animation_speed = self.PARAMETERS["animation_speed"]["value"]
+        self.max_displayed_points = self.PARAMETERS["max_displayed_points"]["value"]
 
         # Current simulation state
         self.sample_count = 0
@@ -147,7 +204,6 @@ class MonteCarloPI(Scene):
 
         # Visual elements storage
         self.displayed_points = []
-        self.max_displayed_points = 500  # Limit for performance
 
     def setup_layout(self):
         """Setup 4-quadrant layout for simulation and analysis"""

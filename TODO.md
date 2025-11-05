@@ -52,7 +52,7 @@ class MyAnimation(Scene):
 
 | Datei | Status | Parameter-Definition | Anmerkungen |
 |-------|--------|---------------------|-------------|
-| `monte_carlo_pi.py` | ❌ | Keine expliziten Parameter-Definitionen gefunden (erste 100 Zeilen) | - |
+| `monte_carlo_pi.py` | ✅ | Class-level `PARAMETERS` dictionary | 6 Parameter: total_samples, batch_size, animation_speed, max_displayed_points, square_size, circle_radius |
 | `metropolis_animation.py` | ❌ | Zu prüfen | - |
 | `polymer_monte_carlo.py` | ❌ | Zu prüfen | - |
 | `polymer_sampling_comparison.py` | ❌ | Zu prüfen | - |
@@ -69,11 +69,12 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 5 Dateien (26.3%)
+- **Konform (✅):** 6 Dateien (31.6%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 14 Dateien (73.7%)
+- **Nicht konform (❌):** 13 Dateien (68.4%)
 
 **🎉 Forcefield Animation Series: 5/5 KOMPLETT!**
+**📊 Monte Carlo & Sampling: 1/4**
 
 ## Nächste Schritte
 
@@ -203,6 +204,26 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - monte_carlo_pi.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 6 Parameter vollständig strukturiert (total_samples, batch_size, animation_speed, max_displayed_points, square_size, circle_radius)
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `setup_monte_carlo_parameters()` Methode aktualisiert: Parameter werden aus PARAMETERS extrahiert
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel
+
+**Besonderheiten:**
+- Monte Carlo π-Berechnung durch Zufallspunkte
+- 4-Quadranten Layout: Simulation + π-Tracking + Convergence
+- Performance-Optimierung durch max_displayed_points
+- Batch processing für Animation
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
+
+**📊 Monte Carlo & Sampling: 1/4 gestartet**
 
 ### 2025-11-05 - nh3_inversion.py refactored ✅
 
