@@ -55,7 +55,7 @@ class MyAnimation(Scene):
 | `monte_carlo_pi.py` | ✅ | Class-level `PARAMETERS` dictionary | 6 Parameter: total_samples, batch_size, animation_speed, max_displayed_points, square_size, circle_radius |
 | `metropolis_animation.py` | ✅ | Class-level `PARAMETERS` dictionaries | 2 Szenen: MetropolisBasic (T, R), MetropolisTemperatures (R) |
 | `polymer_monte_carlo.py` | ✅ | Class-level `PARAMETERS` dictionary | 2 Parameter: active_preset, steps (uses PARAMETER_PRESETS system) |
-| `polymer_sampling_comparison.py` | ❌ | Zu prüfen | - |
+| `polymer_sampling_comparison.py` | ✅ | Class-level `PARAMETERS` dictionary | 29 Parameter: 4 methods (MC, NAIVE, MD, OPT) + common physics params |
 
 ### Specialized Topics
 
@@ -69,12 +69,12 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 8 Dateien (42.1%)
+- **Konform (✅):** 9 Dateien (47.4%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 11 Dateien (57.9%)
+- **Nicht konform (❌):** 10 Dateien (52.6%)
 
 **🎉 Forcefield Animation Series: 5/5 KOMPLETT!**
-**📊 Monte Carlo & Sampling: 3/4**
+**🎉 Monte Carlo & Sampling: 4/4 KOMPLETT!**
 
 ## Nächste Schritte
 
@@ -204,6 +204,36 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - polymer_sampling_comparison.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 29 Parameter vollständig strukturiert (3 general + 10 common + 16 method-specific)
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `setup_parameters()` Methode aktualisiert: Extrahiert aus PARAMETERS statt COMMON_PARAMS/METHOD_PARAMS
+- ✅ Alle Referenzen zu SAMPLING_METHOD, INITIAL_CONFIG, N_STEPS zu self.* konvertiert
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel
+
+**Besonderheiten:**
+- **4 Methoden in einer Datei:** MC (Metropolis), NAIVE (Random+Opt), MD (Molecular Dynamics), OPT (Pure Optimization)
+- **29 Parameter total:**
+  - 3 General: sampling_method, initial_config, n_steps
+  - 10 Common physics: n_beads, box_size, initial_spacing, r0_bond, k_bond, epsilon_lj, sigma_lj, cutoff_lj, mass, k_B
+  - 3 MC params: mc_temperature, mc_max_displacement, mc_steps_per_frame
+  - 4 NAIVE params: naive_perturbation_strength, naive_opt_max_steps, naive_opt_tolerance, naive_steps_per_frame
+  - 4 MD params: md_dt, md_temperature, md_berendsen_tau, md_steps_per_frame
+  - 5 OPT params: opt_temperature, opt_max_steps, opt_tolerance, opt_alpha_init, opt_steps_per_frame
+- **Method-specific prefixes:** All method params prefixed (mc_, naive_, md_, opt_) to avoid naming collisions
+- Polymer chain with 20 beads, fixed topology, harmonic bonds + LJ interactions + wall potential
+- Unified physics with 4 different sampling strategies
+- setup_parameters() dispatches to correct method params based on sampling_method
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
+
+**🎉 MONTE CARLO & SAMPLING SERIES KOMPLETT! (4/4)**
+**📊 Gesamt: 9/19 (47.4%)**
 
 ### 2025-11-05 - polymer_monte_carlo.py refactored ✅
 
