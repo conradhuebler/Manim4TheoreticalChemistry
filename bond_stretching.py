@@ -53,15 +53,77 @@ def get_string(key):
 
 
 class BondStretching(Scene):
-    def construct(self):
-        # Bond parameters (typical C-C single bond)
-        self.k = 300.0  # kcal/(mol·Å²) - force constant
-        self.r0 = 1.54  # Å - equilibrium bond length
+    """Bond stretching animation with harmonic potential V = 1/2 k(r-r₀)²."""
 
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Physical parameters
+        "k": {
+            "value": 300.0,
+            "type": float,
+            "unit": "kcal/(mol·Å²)",
+            "description": "Force constant for harmonic potential (typical C-C single bond)",
+            "min": 0.0,
+            "max": 1000.0
+        },
+        "r0": {
+            "value": 1.54,
+            "type": float,
+            "unit": "Å",
+            "description": "Equilibrium bond length (C-C single bond)",
+            "min": 0.5,
+            "max": 3.0
+        },
         # Animation parameters
-        self.amplitude = 0.4  # Å - oscillation amplitude
-        self.frequency = 1.0  # Hz
-        self.scale_factor = 2.0  # Scale for visualization
+        "amplitude": {
+            "value": 0.4,
+            "type": float,
+            "unit": "Å",
+            "description": "Oscillation amplitude for bond stretching",
+            "min": 0.1,
+            "max": 1.0
+        },
+        "frequency": {
+            "value": 1.0,
+            "type": float,
+            "unit": "Hz",
+            "description": "Oscillation frequency",
+            "min": 0.1,
+            "max": 5.0
+        },
+        "scale_factor": {
+            "value": 2.0,
+            "type": float,
+            "unit": "-",
+            "description": "Visual scaling factor for molecule display",
+            "min": 0.5,
+            "max": 5.0
+        },
+        "duration": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 60.0
+        },
+        "fps": {
+            "value": 60,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
+        }
+    }
+
+    def construct(self):
+        # Extract parameters from central dictionary
+        self.k = self.PARAMETERS["k"]["value"]
+        self.r0 = self.PARAMETERS["r0"]["value"]
+        self.amplitude = self.PARAMETERS["amplitude"]["value"]
+        self.frequency = self.PARAMETERS["frequency"]["value"]
+        self.scale_factor = self.PARAMETERS["scale_factor"]["value"]
 
         # Setup layout
         self.setup_layout()
@@ -227,8 +289,9 @@ class BondStretching(Scene):
 
     def animate_stretching(self):
         """Animate bond stretching with sinusoidal motion"""
-        duration = 10.0  # seconds
-        fps = 60
+        # Get animation parameters from central dictionary
+        duration = self.PARAMETERS["duration"]["value"]
+        fps = self.PARAMETERS["fps"]["value"]
         frames = int(duration * fps)
 
         for frame in range(frames):
@@ -264,7 +327,7 @@ class BondStretching(Scene):
                 self.state_label.move_to(self.mol_center + DOWN * 2.8)
                 self.add(self.state_label)
 
-            self.wait(1/30)
+            self.wait(1/fps)
 
 
 if __name__ == "__main__":

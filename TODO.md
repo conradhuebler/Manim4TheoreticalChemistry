@@ -31,7 +31,7 @@ class MyAnimation(Scene):
 
 | Datei | Status | Parameter-Definition | Anmerkungen |
 |-------|--------|---------------------|-------------|
-| `bond_stretching.py` | ❌ | `construct()` Methode, Zeilen 57-64 | Parameter: k, r0, amplitude, frequency, scale_factor |
+| `bond_stretching.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: k, r0, amplitude, frequency, scale_factor, duration, fps |
 | `angle_bending.py` | ❌ | `construct()` Methode, Zeilen 59-67 | Parameter: k_angle, theta0_deg, amplitude_deg, frequency, bond_length |
 | `torsion_angle_optimized.py` | ❌ | `construct()` Methode, Zeilen 53-56 | Parameter: V0, n, gamma |
 | `nh3_inversion.py` | ❌ | `setup_parameters()` Methode, Zeilen 72-83 | Parameter: h_radius, h_positions, dt, z_nitrogen |
@@ -69,9 +69,9 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 0 Dateien (0%)
+- **Konform (✅):** 1 Datei (5.3%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 19 Dateien (100%)
+- **Nicht konform (❌):** 18 Dateien (94.7%)
 
 ## Nächste Schritte
 
@@ -197,6 +197,24 @@ class BondStretching(Scene):
 - Das Refactoring ändert nichts an der Funktionalität, nur an der Struktur
 - Jede Datei kann einzeln umgestellt werden (keine Abhängigkeiten)
 - Nach dem Refactoring müssen die Animationen getestet werden
+
+---
+
+## Changelog
+
+### 2025-11-05 - bond_stretching.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 7 Parameter vollständig strukturiert (k, r0, amplitude, frequency, scale_factor, duration, fps)
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `construct()` Methode aktualisiert: Parameter werden aus PARAMETERS extrahiert
+- ✅ `animate_stretching()` Methode aktualisiert: duration und fps aus PARAMETERS
+- ✅ Bug fix: `self.wait(1/30)` → `self.wait(1/fps)` für Konsistenz
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
 
 ---
 
