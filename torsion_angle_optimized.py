@@ -49,11 +49,59 @@ def get_string(key):
 
 
 class TorsionAngleOptimized(Scene):
+    """Torsion angle animation with periodic potential V = V₀/2[1+cos(nφ-γ)]."""
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Physical parameters
+        "V0": {
+            "value": 3.0,
+            "type": float,
+            "unit": "kcal/mol",
+            "description": "Rotational barrier height for ethane torsion",
+            "min": 0.0,
+            "max": 10.0
+        },
+        "n": {
+            "value": 3,
+            "type": int,
+            "unit": "-",
+            "description": "Periodicity (3-fold for ethane)",
+            "min": 1,
+            "max": 6
+        },
+        "gamma": {
+            "value": 0.0,
+            "type": float,
+            "unit": "rad",
+            "description": "Phase shift for torsional potential",
+            "min": 0.0,
+            "max": 6.28
+        },
+        # Animation parameters
+        "duration": {
+            "value": 48.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration (3 full rotations)",
+            "min": 10.0,
+            "max": 120.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
+        }
+    }
+
     def construct(self):
-        # Parameters
-        self.V0 = 3.0  # kcal/mol
-        self.n = 3
-        self.gamma = 0.0
+        # Extract parameters from central dictionary
+        self.V0 = self.PARAMETERS["V0"]["value"]
+        self.n = self.PARAMETERS["n"]["value"]
+        self.gamma = self.PARAMETERS["gamma"]["value"]
 
         # Setup
         self.setup_layout()
@@ -320,8 +368,9 @@ class TorsionAngleOptimized(Scene):
 
     def animate_rotation(self):
         """Animate full 360° rotation"""
-        duration = 48.0
-        fps = 30
+        # Get animation parameters from central dictionary
+        duration = self.PARAMETERS["duration"]["value"]
+        fps = self.PARAMETERS["fps"]["value"]
         frames = int(duration * fps)
 
         for frame in range(frames):
