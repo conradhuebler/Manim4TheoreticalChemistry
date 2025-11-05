@@ -51,7 +51,7 @@
 """
 Brief description of what this animation demonstrates.
 
-Copyright (C) 2019 - 2025 Conrad Hübler <Conrad.Huebler@gmx.net>
+Copyright (C) 2025 Conrad Hübler <Conrad.Huebler@gmx.net>
 
 This file is part of Manim4TheoreticalChemistry.
 
@@ -69,9 +69,8 @@ import numpy as np
 
 **Important Rules:**
 - ✅ Copyright ownership: Always Conrad Hübler
-- ✅ Year updates: Always update copyright year to current year (2025) when modifying files
+- ✅ Year format: `Copyright (C) 2025 Conrad Hübler <Conrad.Huebler@gmx.net>`
 - ✅ Claude contributions: Mark Claude-generated code sections in comments, but copyright stays with Conrad
-- ✅ Format: `Copyright (C) 2019 - 2025 Conrad Hübler <Conrad.Huebler@gmx.net>`
 - ✅ AI acknowledgment: Add Claude contribution notes in code comments, not copyright headers
 - ❌ Never change copyright holder to Claude, Anthropic, or anyone else
 
@@ -88,6 +87,225 @@ def add_gaussian_hill(self, center, height, width):
     """Add a Gaussian hill at the specified center."""
     # Implementation...
 ```
+
+---
+
+## 🏗️ Architecture Requirements: GUI Tool Compatibility
+
+**Critical Design Pattern:** All configurable parameters must be centrally accessible for dynamic GUI generation.
+
+**Goal:** Enable a PyQt6 GUI tool to dynamically load any animation file and automatically create input fields for all adjustable parameters.
+
+### Parameter Structure Requirements
+
+**1. Central Parameter Dictionary**
+
+All animation parameters MUST be defined in a central, easily parseable structure at the class level:
+
+```python
+class MyAnimation(Scene):
+    """Animation demonstrating bond stretching."""
+
+    # ✅ CORRECT: Central parameter dictionary
+    PARAMETERS = {
+        # Physical parameters
+        "k": {
+            "value": 500.0,
+            "type": float,
+            "unit": "eV/Å²",
+            "description": "Spring constant for harmonic potential",
+            "min": 0.0,
+            "max": 2000.0
+        },
+        "r0": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "Equilibrium bond length",
+            "min": 0.5,
+            "max": 3.0
+        },
+        # Animation parameters
+        "duration": {
+            "value": 8.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 30.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second",
+            "min": 10,
+            "max": 60
+        }
+    }
+
+    def construct(self):
+        # Access parameters from central dictionary
+        k = self.PARAMETERS["k"]["value"]
+        r0 = self.PARAMETERS["r0"]["value"]
+        # ... rest of implementation
+```
+
+**2. Parameter Dictionary Format**
+
+Each parameter entry should include:
+- `value`: The default value
+- `type`: Python type (float, int, str, bool)
+- `unit`: Physical unit (if applicable)
+- `description`: Human-readable description
+- `min`: Minimum allowed value (optional, for numeric types)
+- `max`: Maximum allowed value (optional, for numeric types)
+
+**3. What NOT to Do**
+
+❌ **WRONG: Scattered hardcoded values**
+```python
+class BadAnimation(Scene):
+    def construct(self):
+        k = 500.0  # Hidden parameter, GUI can't find it
+        r0 = 1.5   # Another hidden parameter
+        duration = 8.0  # No metadata
+```
+
+❌ **WRONG: Instance variables without metadata**
+```python
+class BadAnimation(Scene):
+    def setup_parameters(self):
+        self.k = 500.0  # GUI can't extract this automatically
+        self.r0 = 1.5
+```
+
+### Benefits of This Pattern
+
+1. **GUI Auto-Generation:** PyQt6 tool can read PARAMETERS and create appropriate input widgets
+2. **Documentation:** Parameters are self-documenting with descriptions and units
+3. **Validation:** Min/max values enable automatic input validation
+4. **Discoverability:** All parameters in one place, easy to find and modify
+5. **Type Safety:** Explicit type information prevents errors
+
+### Example: Complete Animation Structure
+
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Bond stretching animation with harmonic potential.
+
+Copyright (C) 2025 Conrad Hübler <Conrad.Huebler@gmx.net>
+"""
+
+from manimlib import *
+import numpy as np
+
+LANGUAGE = "DE"
+
+STRINGS = {
+    "DE": {"title": "Bindungsstrecken"},
+    "EN": {"title": "Bond Stretching"}
+}
+
+def get_string(key):
+    return STRINGS[LANGUAGE][key]
+
+
+class BondStretching(Scene):
+    """Demonstrates harmonic bond potential V = ½k(r-r₀)²."""
+
+    # ✅ All parameters centrally defined for GUI tool
+    PARAMETERS = {
+        "k": {
+            "value": 500.0,
+            "type": float,
+            "unit": "eV/Å²",
+            "description": "Spring constant",
+            "min": 0.0,
+            "max": 2000.0
+        },
+        "r0": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "Equilibrium bond length",
+            "min": 0.5,
+            "max": 3.0
+        },
+        "amplitude": {
+            "value": 0.3,
+            "type": float,
+            "unit": "Å",
+            "description": "Oscillation amplitude",
+            "min": 0.1,
+            "max": 1.0
+        },
+        "frequency": {
+            "value": 0.5,
+            "type": float,
+            "unit": "Hz",
+            "description": "Oscillation frequency",
+            "min": 0.1,
+            "max": 2.0
+        },
+        "duration": {
+            "value": 8.0,
+            "type": float,
+            "unit": "s",
+            "description": "Animation duration",
+            "min": 1.0,
+            "max": 30.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second",
+            "min": 10,
+            "max": 60
+        }
+    }
+
+    def construct(self):
+        self.setup_scene()
+        self.run_animation()
+
+    def setup_scene(self):
+        """Setup visualization elements."""
+        # Extract parameters
+        self.k = self.PARAMETERS["k"]["value"]
+        self.r0 = self.PARAMETERS["r0"]["value"]
+        # ... rest of setup
+
+    def run_animation(self):
+        """Main animation loop."""
+        duration = self.PARAMETERS["duration"]["value"]
+        fps = self.PARAMETERS["fps"]["value"]
+        frames = int(duration * fps)
+
+        for frame in range(frames):
+            # Animation logic
+            self.wait(1/fps)
+```
+
+### GUI Tool Integration
+
+The PyQt6 tool will:
+1. Import the animation file
+2. Inspect the `PARAMETERS` class variable
+3. Generate appropriate Qt widgets:
+   - `QDoubleSpinBox` for float parameters
+   - `QSpinBox` for int parameters
+   - `QLineEdit` for string parameters
+   - `QCheckBox` for bool parameters
+4. Set min/max ranges from metadata
+5. Display units and descriptions as labels/tooltips
+6. Allow user to modify values before running animation
+
+**This architecture ensures that animations remain standalone (can be run directly with ManimGL) while also being fully compatible with GUI-based parameter exploration.**
 
 ---
 
