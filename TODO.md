@@ -53,7 +53,7 @@ class MyAnimation(Scene):
 | Datei | Status | Parameter-Definition | Anmerkungen |
 |-------|--------|---------------------|-------------|
 | `monte_carlo_pi.py` | ✅ | Class-level `PARAMETERS` dictionary | 6 Parameter: total_samples, batch_size, animation_speed, max_displayed_points, square_size, circle_radius |
-| `metropolis_animation.py` | ❌ | Zu prüfen | - |
+| `metropolis_animation.py` | ✅ | Class-level `PARAMETERS` dictionaries | 2 Szenen: MetropolisBasic (T, R), MetropolisTemperatures (R) |
 | `polymer_monte_carlo.py` | ❌ | Zu prüfen | - |
 | `polymer_sampling_comparison.py` | ❌ | Zu prüfen | - |
 
@@ -69,12 +69,12 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 6 Dateien (31.6%)
+- **Konform (✅):** 7 Dateien (36.8%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 13 Dateien (68.4%)
+- **Nicht konform (❌):** 12 Dateien (63.2%)
 
 **🎉 Forcefield Animation Series: 5/5 KOMPLETT!**
-**📊 Monte Carlo & Sampling: 1/4**
+**📊 Monte Carlo & Sampling: 2/4**
 
 ## Nächste Schritte
 
@@ -204,6 +204,28 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - metropolis_animation.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary für beide Szenen hinzugefügt
+- ✅ **MetropolisBasic:** 2 Parameter (T, R) vollständig strukturiert
+- ✅ **MetropolisTemperatures:** 1 Parameter (R) strukturiert
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `construct()` Methoden aktualisiert: Parameter werden aus PARAMETERS extrahiert
+- ✅ Alle R-Referenzen von global zu self.R konvertiert
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel für beide Szenen
+
+**Besonderheiten:**
+- **2 Szenen in einer Datei:** MetropolisBasic und MetropolisTemperatures
+- Metropolis-Algorithmus: P(accept) = exp(-ΔE/RT)
+- Temperaturvergleich mit mehreren Kurven
+- T_values und colors_temp aus Modul-Level (könnte später konfigurierbar gemacht werden)
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
+
+**📊 Monte Carlo & Sampling: 2/4**
 
 ### 2025-11-05 - monte_carlo_pi.py refactored ✅
 
