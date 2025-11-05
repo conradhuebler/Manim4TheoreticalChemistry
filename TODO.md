@@ -32,7 +32,7 @@ class MyAnimation(Scene):
 | Datei | Status | Parameter-Definition | Anmerkungen |
 |-------|--------|---------------------|-------------|
 | `bond_stretching.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: k, r0, amplitude, frequency, scale_factor, duration, fps |
-| `angle_bending.py` | ❌ | `construct()` Methode, Zeilen 59-67 | Parameter: k_angle, theta0_deg, amplitude_deg, frequency, bond_length |
+| `angle_bending.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: k_angle, theta0_deg, amplitude_deg, frequency, bond_length, duration, fps |
 | `torsion_angle_optimized.py` | ❌ | `construct()` Methode, Zeilen 53-56 | Parameter: V0, n, gamma |
 | `nh3_inversion.py` | ❌ | `setup_parameters()` Methode, Zeilen 72-83 | Parameter: h_radius, h_positions, dt, z_nitrogen |
 | `nonbonded_interactions.py` | ❌ | `construct()` Methode, Zeilen 82-92 | Parameter: epsilon, sigma, k_coulomb, r_start, r_end |
@@ -69,9 +69,9 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 1 Datei (5.3%)
+- **Konform (✅):** 2 Dateien (10.5%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 18 Dateien (94.7%)
+- **Nicht konform (❌):** 17 Dateien (89.5%)
 
 ## Nächste Schritte
 
@@ -201,6 +201,19 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - angle_bending.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 7 Parameter vollständig strukturiert (k_angle, theta0_deg, amplitude_deg, frequency, bond_length, duration, fps)
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `construct()` Methode aktualisiert: Parameter werden aus PARAMETERS extrahiert
+- ✅ `animate_bending()` Methode aktualisiert: duration und fps aus PARAMETERS
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
 
 ### 2025-11-05 - bond_stretching.py refactored ✅
 
