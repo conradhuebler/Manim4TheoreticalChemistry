@@ -316,6 +316,32 @@ ACTIVE_PRESET = "DEMO"  # Test mit beiden Potentialen + aktiviertem LJ
 
 
 class PolymerMonteCarlo(Scene):
+    """Polymer Monte Carlo simulation with configurable presets."""
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    # Note: This uses the preset system defined above (PARAMETER_PRESETS)
+    # The active preset is determined by ACTIVE_PRESET
+    PARAMETERS = {
+        "active_preset": {
+            "value": ACTIVE_PRESET,
+            "type": str,
+            "unit": "-",
+            "description": "Active parameter preset (DEMO, REALISTIC, SLOW, EDUCATIONAL, NO_LJ, NO_BONDS, BOTH, NONE)",
+            "min": None,
+            "max": None
+        },
+        "steps": {
+            "value": 10000,
+            "type": int,
+            "unit": "MC steps",
+            "description": "Number of Monte Carlo steps to simulate",
+            "min": 100,
+            "max": 100000
+        }
+        # Note: Detailed parameters come from PARAMETER_PRESETS[active_preset]
+        # This allows preset switching while maintaining GUI compatibility
+    }
+
     def construct(self):
         # Setup
         self.setup_parameters()
@@ -334,17 +360,19 @@ class PolymerMonteCarlo(Scene):
 
     def setup_parameters(self):
         """Initialize all simulation parameters from active preset"""
-        # Load active preset
-        if ACTIVE_PRESET not in PARAMETER_PRESETS:
-            raise ValueError(f"Unknown preset: {ACTIVE_PRESET}. Choose from: {list(PARAMETER_PRESETS.keys())}")
+        # Extract from PARAMETERS dictionary
+        active_preset_name = self.PARAMETERS["active_preset"]["value"]
+        self.steps = self.PARAMETERS["steps"]["value"]
 
-        preset = PARAMETER_PRESETS[ACTIVE_PRESET]
+        # Load active preset
+        if active_preset_name not in PARAMETER_PRESETS:
+            raise ValueError(f"Unknown preset: {active_preset_name}. Choose from: {list(PARAMETER_PRESETS.keys())}")
+
+        preset = PARAMETER_PRESETS[active_preset_name]
         print(f"\n{'='*70}")
-        print(f"Loading preset: {ACTIVE_PRESET.upper()}")
+        print(f"Loading preset: {active_preset_name.upper()}")
         print(f"Description: {preset['description']}")
         print(f"{'='*70}\n")
-
-        self.steps = 10000
         # ====== POLYMER GEOMETRY ======
         geometry = preset["polymer_geometry"]
         self.n_beads = geometry["n_beads"]

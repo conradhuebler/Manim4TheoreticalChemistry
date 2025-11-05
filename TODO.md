@@ -54,7 +54,7 @@ class MyAnimation(Scene):
 |-------|--------|---------------------|-------------|
 | `monte_carlo_pi.py` | ✅ | Class-level `PARAMETERS` dictionary | 6 Parameter: total_samples, batch_size, animation_speed, max_displayed_points, square_size, circle_radius |
 | `metropolis_animation.py` | ✅ | Class-level `PARAMETERS` dictionaries | 2 Szenen: MetropolisBasic (T, R), MetropolisTemperatures (R) |
-| `polymer_monte_carlo.py` | ❌ | Zu prüfen | - |
+| `polymer_monte_carlo.py` | ✅ | Class-level `PARAMETERS` dictionary | 2 Parameter: active_preset, steps (uses PARAMETER_PRESETS system) |
 | `polymer_sampling_comparison.py` | ❌ | Zu prüfen | - |
 
 ### Specialized Topics
@@ -69,12 +69,12 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 7 Dateien (36.8%)
+- **Konform (✅):** 8 Dateien (42.1%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 12 Dateien (63.2%)
+- **Nicht konform (❌):** 11 Dateien (57.9%)
 
 **🎉 Forcefield Animation Series: 5/5 KOMPLETT!**
-**📊 Monte Carlo & Sampling: 2/4**
+**📊 Monte Carlo & Sampling: 3/4**
 
 ## Nächste Schritte
 
@@ -204,6 +204,29 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - polymer_monte_carlo.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 2 Parameter vollständig strukturiert (active_preset, steps)
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `setup_parameters()` Methode aktualisiert: Verwendet PARAMETERS für active_preset und steps
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel
+
+**Besonderheiten:**
+- **Preset-System:** Verwendet PARAMETER_PRESETS mit 8 vordefinier Presets
+  - REALISTIC, DEMO, SLOW, EDUCATIONAL
+  - NO_LJ, NO_BONDS, BOTH, NONE (didaktische Varianten)
+- Polymer-Kette mit 20 Beads
+- Monte Carlo Simulation mit Metropolis-Algorithmus
+- Harmonische Bindungen + Lennard-Jones Wechselwirkungen
+- active_preset Parameter erlaubt GUI-gesteuerte Preset-Auswahl
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
+
+**📊 Monte Carlo & Sampling: 3/4**
 
 ### 2025-11-05 - metropolis_animation.py refactored ✅
 
