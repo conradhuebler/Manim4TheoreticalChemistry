@@ -35,7 +35,7 @@ class MyAnimation(Scene):
 | `angle_bending.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: k_angle, theta0_deg, amplitude_deg, frequency, bond_length, duration, fps |
 | `torsion_angle_optimized.py` | ✅ | Class-level `PARAMETERS` dictionary | 5 Parameter: V0, n, gamma, duration, fps |
 | `nonbonded_interactions.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: epsilon, sigma, k_coulomb, r_start, r_end, duration, fps |
-| `nh3_inversion.py` | ❌ | `setup_parameters()` Methode, Zeilen 72-83 | Parameter: h_radius, h_positions, dt, z_nitrogen |
+| `nh3_inversion.py` | ✅ | Class-level `PARAMETERS` dictionary | 5 Parameter: V0, a, h_radius, z_nitrogen_initial, dt (ThreeDScene) |
 
 ### Molecular Dynamics & Quantum
 
@@ -69,9 +69,11 @@ class MyAnimation(Scene):
 ## Zusammenfassung
 
 - **Gesamt:** 19 Dateien
-- **Konform (✅):** 4 Dateien (21.1%)
+- **Konform (✅):** 5 Dateien (26.3%)
 - **Teilweise konform (⚠️):** 0 Dateien (0%)
-- **Nicht konform (❌):** 15 Dateien (78.9%)
+- **Nicht konform (❌):** 14 Dateien (73.7%)
+
+**🎉 Forcefield Animation Series: 5/5 KOMPLETT!**
 
 ## Nächste Schritte
 
@@ -201,6 +203,27 @@ class BondStretching(Scene):
 ---
 
 ## Changelog
+
+### 2025-11-05 - nh3_inversion.py refactored ✅
+
+**Änderungen:**
+- ✅ Zentrales `PARAMETERS`-Dictionary auf Klassenebene hinzugefügt
+- ✅ 5 Parameter vollständig strukturiert (V0, a, h_radius, z_nitrogen_initial, dt)
+- ✅ Alle Parameter mit value, type, unit, description, min, max versehen
+- ✅ `__init__()` Methode aktualisiert: Parameter werden aus PARAMETERS extrahiert
+- ✅ `inversion_potential()` Methode aktualisiert: V0 und a aus PARAMETERS
+- ✅ Syntax validiert: Keine Python-Fehler
+- ✅ Struktur validiert: GUI-kompatibel
+
+**Besonderheiten:**
+- ThreeDScene mit __init__ statt construct() für Parameter-Extraktion
+- Double-well potential für NH₃ Inversion
+- 3D-Molekül + 2D-Energy-Overlay (fix_in_frame)
+- h_positions wird dynamisch aus h_radius berechnet
+
+**Status:** Vollständig konform mit claude.md Vorschrift (Zeilen 99-309)
+
+**🎉 FORCEFIELD ANIMATION SERIES KOMPLETT! (5/5)**
 
 ### 2025-11-05 - nonbonded_interactions.py refactored ✅
 

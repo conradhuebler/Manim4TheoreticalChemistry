@@ -53,10 +53,65 @@ def get_string(key):
     return strings[LANGUAGE].get(key, key)
 
 class NH3Inversion(ThreeDScene):
+    """NH3 inversion animation with double-well potential V = V₀(16(z/a)⁴-8(z/a)²+1)."""
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Physical parameters
+        "V0": {
+            "value": 2.5,
+            "type": float,
+            "unit": "-",
+            "description": "Barrier height for inversion potential (dimensionless)",
+            "min": 0.5,
+            "max": 10.0
+        },
+        "a": {
+            "value": 0.4,
+            "type": float,
+            "unit": "Å",
+            "description": "Well separation parameter (minima at ±a)",
+            "min": 0.2,
+            "max": 1.0
+        },
+        "h_radius": {
+            "value": 0.8,
+            "type": float,
+            "unit": "Å",
+            "description": "Distance from center to H atoms in triangular arrangement",
+            "min": 0.5,
+            "max": 1.5
+        },
+        # Animation parameters
+        "z_nitrogen_initial": {
+            "value": 0.4,
+            "type": float,
+            "unit": "Å",
+            "description": "Initial N position above H plane",
+            "min": 0.1,
+            "max": 1.0
+        },
+        "dt": {
+            "value": 0.02,
+            "type": float,
+            "unit": "s",
+            "description": "Animation time step",
+            "min": 0.01,
+            "max": 0.1
+        }
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Physical parameters
+        # Extract physical parameters from central dictionary
+        self.V0 = self.PARAMETERS["V0"]["value"]
+        self.a = self.PARAMETERS["a"]["value"]
+        self.h_radius = self.PARAMETERS["h_radius"]["value"]
+        self.dt = self.PARAMETERS["dt"]["value"]
+        self.z_nitrogen = self.PARAMETERS["z_nitrogen_initial"]["value"]
+
+        # Setup NH3 molecular geometry
         self.setup_parameters()
 
         # Animation data
@@ -66,14 +121,11 @@ class NH3Inversion(ThreeDScene):
 
         # Current state
         self.current_time = 0.0
-        self.dt = 0.02  # Animation time step
-        self.z_nitrogen = 0.4  # Initial N position (above H plane)
 
     def setup_parameters(self):
-        """Setup NH3 molecular and potential parameters"""
+        """Setup NH3 molecular geometry from h_radius parameter"""
         # H atoms in triangular arrangement (fixed)
         angle_offset = 2 * np.pi / 3  # 120° apart
-        self.h_radius = 0.8  # Distance from center to H atoms
 
         self.h_positions = []
         for i in range(3):
@@ -260,13 +312,11 @@ class NH3Inversion(ThreeDScene):
         """NH3 inversion potential as function of N position"""
         # Didactic double-well potential: V(z) = V₀ * (16*(z/a)⁴ - 8*(z/a)² + 1)
         # This form guarantees symmetric minima at z = ±a and barrier at z = 0
-
-        V0 = 2.5  # Barrier height (dimensionless units)
-        a = 0.4   # Well separation parameter (gives minima at ±0.4 Å)
+        # V0 and a are now taken from PARAMETERS (set in __init__)
 
         # Normalized quartic double-well
-        z_norm = z / a
-        return V0 * (16 * z_norm**4 - 8 * z_norm**2 + 1)
+        z_norm = z / self.a
+        return self.V0 * (16 * z_norm**4 - 8 * z_norm**2 + 1)
 
     def create_inversion_potential(self):
         """Create the double-well inversion potential curve"""
