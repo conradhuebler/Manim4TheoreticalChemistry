@@ -141,16 +141,16 @@ class PolymerSamplingComparison(Scene):
             "type": str,
             "unit": "-",
             "description": "Sampling method: MC (Monte Carlo), NAIVE (Random+Opt), MD (Molecular Dynamics), OPT (Pure Optimization)",
-            "min": None,
-            "max": None
+            "min": "",
+            "max": ""
         },
         "initial_config": {
             "value": INITIAL_CONFIG,
             "type": str,
             "unit": "-",
             "description": "Initial configuration: LINEAR (chain along diagonal) or RANDOM (uniform in box)",
-            "min": None,
-            "max": None
+            "min": "",
+            "max": ""
         },
         "n_steps": {
             "value": N_STEPS,

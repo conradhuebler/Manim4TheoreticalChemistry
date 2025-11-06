@@ -120,8 +120,8 @@ class QuantumDynamics(Scene):
             "type": str,
             "unit": "-",
             "description": "Active scenario preset: TUNNELING, CLASSICAL_TRAPPED, HIGH_ENERGY, DISPERSION, COHERENT",
-            "min": None,
-            "max": None
+            "min": "",
+            "max": ""
         },
 
         # ========================================================================

@@ -223,8 +223,8 @@ class H2MDFull(Scene):
             "type": bool,
             "unit": "-",
             "description": "Disable sliding window for didactic purposes (show full history)",
-            "min": None,
-            "max": None
+            "min": 0,
+            "max": 1
         },
 
         # ========================================================================

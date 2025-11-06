@@ -327,8 +327,8 @@ class PolymerMonteCarlo(Scene):
             "type": str,
             "unit": "-",
             "description": "Active parameter preset (DEMO, REALISTIC, SLOW, EDUCATIONAL, NO_LJ, NO_BONDS, BOTH, NONE)",
-            "min": None,
-            "max": None
+            "min": "",
+            "max": ""
         },
         "steps": {
             "value": 10000,
