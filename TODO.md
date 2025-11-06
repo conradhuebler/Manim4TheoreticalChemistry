@@ -620,6 +620,309 @@ class BondStretching(Scene):
 
 ---
 
-**Stand:** 2025-11-05
+## Zeit/FPS Parameter Analyse (2025-11-06)
+
+**Ziel:** Alle hardkodierten Zeit-, FPS- und Phasenlängen-Parameter in den Animations-Skripten identifizieren und konfigurierbar machen.
+
+### High-Priority Dateien (⭐⭐⭐)
+
+#### 1. h2_md_full_refactored.py (14 → 22 Parameter)
+**Aktueller Stand:** 14 Parameter (k_B, T, dt, box_size, box_k, mass, epsilon, sigma, D_e, r_e, alpha, plot_time_window, min_points_for_snake, disable_sliding_window)
+
+**Hardcodierte Zeit-Werte gefunden:**
+
+**Phase 1 (Freie Atome):**
+- Zeile 735: `for step in range(200):` - Dauer ~100 fs (200 * 0.5fs)
+- Zeile 763: `self.wait(0.004)` - Animation Frame-Wartezeit
+
+**Phase 2 (Zwei Atome mit Wechselwirkung):**
+- Zeile 794: `for step in range(800):` - Dauer ~400 fs (800 * 0.5fs)
+- Zeile 844: `self.wait(0.001)` - Animation Frame-Wartezeit
+
+**Phase 4 (H₂-Molekül Formation):**
+- Zeile 948: `for step in range(200):` - Erste Schleife ~100 fs
+- Zeile 1004: `self.wait(0.02)` - Animation Frame-Wartezeit
+- Zeile 1035: `for step in range(200):` - Zweite Schleife ~100 fs
+- Zeile 1091: `self.wait(0.02)` - Animation Frame-Wartezeit (wiederholt)
+
+**Phase 5 (Dissoziation):**
+- Zeile 1114: `for step in range(200):` - Dauer ~100 fs
+- Zeile 1173: `self.wait(0.005)` - Animation Frame-Wartezeit
+
+**Empfohlene neue Parameter (+8):**
+```python
+"phase1_steps": {
+    "value": 200,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 1 duration: Free H-atoms in box",
+    "min": 50,
+    "max": 1000
+},
+"phase1_wait": {
+    "value": 0.004,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 1 animation frame wait time",
+    "min": 0.001,
+    "max": 0.1
+},
+"phase2_steps": {
+    "value": 800,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 2 duration: Two H-atoms with interaction",
+    "min": 200,
+    "max": 2000
+},
+"phase2_wait": {
+    "value": 0.001,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 2 animation frame wait time",
+    "min": 0.0001,
+    "max": 0.01
+},
+"phase4_steps": {
+    "value": 200,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 4 duration: H₂ formation (per loop)",
+    "min": 50,
+    "max": 1000
+},
+"phase4_wait": {
+    "value": 0.02,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 4 animation frame wait time",
+    "min": 0.001,
+    "max": 0.1
+},
+"phase5_steps": {
+    "value": 200,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 5 duration: H₂ dissociation",
+    "min": 50,
+    "max": 1000
+},
+"phase5_wait": {
+    "value": 0.005,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 5 animation frame wait time",
+    "min": 0.001,
+    "max": 0.05
+}
+```
+
+**Status:** ⚠️ Benötigt Refactoring (+8 Parameter)
+
+---
+
+#### 2. nh3_inversion.py (5 → 14 Parameter)
+**Aktueller Stand:** 5 Parameter (V0, a, h_radius, z_nitrogen_initial, dt)
+
+**Hardcodierte Zeit-Werte gefunden:**
+
+**Phase 2 (Approaching Barrier):**
+- Zeile 407: `for step in range(60):` - Annäherung an Barriere
+- Zeile 422: `self.wait(0.05)` - Animation Frame-Wartezeit
+
+**Phase 3 (Barrier Crossing):**
+- Zeile 435: `for step in range(40):` - Barrieren-Überquerung
+- Zeile 450: `self.wait(0.05)` - Animation Frame-Wartezeit
+
+**Phase 4 (Inverted State):**
+- Zeile 463: `for step in range(60):` - Invertierter Zustand
+- Zeile 477: `self.wait(0.05)` - Animation Frame-Wartezeit
+
+**Phase 5 (Oscillation):**
+- Zeile 494: `for cycle in range(3):` - Anzahl Oszillations-Zyklen
+- Zeile 496: `for step in range(80):` - Rückreise-Schritte
+- Zeile 511: `self.wait(0.03)` - Rückreise-Wartezeit
+- Zeile 514: `for step in range(80):` - Vorwärtsreise-Schritte
+- Zeile 529: `self.wait(0.03)` - Vorwärtsreise-Wartezeit
+
+**Empfohlene neue Parameter (+9):**
+```python
+"phase2_steps": {
+    "value": 60,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 2 duration: Approaching barrier",
+    "min": 20,
+    "max": 200
+},
+"phase2_wait": {
+    "value": 0.05,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 2 animation frame wait time",
+    "min": 0.01,
+    "max": 0.2
+},
+"phase3_steps": {
+    "value": 40,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 3 duration: Barrier crossing",
+    "min": 10,
+    "max": 100
+},
+"phase3_wait": {
+    "value": 0.05,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 3 animation frame wait time",
+    "min": 0.01,
+    "max": 0.2
+},
+"phase4_steps": {
+    "value": 60,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 4 duration: Inverted state",
+    "min": 20,
+    "max": 200
+},
+"phase4_wait": {
+    "value": 0.05,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 4 animation frame wait time",
+    "min": 0.01,
+    "max": 0.2
+},
+"phase5_cycles": {
+    "value": 3,
+    "type": int,
+    "unit": "cycles",
+    "description": "Number of oscillation cycles",
+    "min": 1,
+    "max": 10
+},
+"phase5_steps": {
+    "value": 80,
+    "type": int,
+    "unit": "steps",
+    "description": "Steps per oscillation half-period",
+    "min": 20,
+    "max": 200
+},
+"phase5_wait": {
+    "value": 0.03,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 5 animation frame wait time",
+    "min": 0.01,
+    "max": 0.1
+}
+```
+
+**Status:** ⚠️ Benötigt Refactoring (+9 Parameter)
+
+---
+
+#### 3. h3_reaction_pathway.py (9 → 15 Parameter)
+**Aktueller Stand:** 9 Parameter (D_e, r_e, alpha, mass, temperature, dt, x_h1, x_h3, x_h2_initial)
+
+**Hardcodierte Zeit-Werte gefunden:**
+
+**Phase 2 (Approaching):**
+- Zeile 620: `for step in range(60):` - H₂ nähert sich Zentrum
+- Zeile 644: `self.wait(0.08)` - Animation Frame-Wartezeit
+
+**Phase 3 (Transition State):**
+- Zeile 653: `for step in range(40):` - Übergangszustand [H₃]‡
+- Zeile 672: `self.wait(0.1)` - Animation Frame-Wartezeit
+
+**Phase 4 (Bond Breaking):**
+- Zeile 684: `for step in range(60):` - Bindungsbruch/Bildung
+- Zeile 704: `self.wait(0.08)` - Animation Frame-Wartezeit
+
+**Empfohlene neue Parameter (+6):**
+```python
+"phase2_steps": {
+    "value": 60,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 2 duration: H₂ approaching center",
+    "min": 20,
+    "max": 200
+},
+"phase2_wait": {
+    "value": 0.08,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 2 animation frame wait time",
+    "min": 0.01,
+    "max": 0.5
+},
+"phase3_steps": {
+    "value": 40,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 3 duration: Transition state [H₃]‡",
+    "min": 10,
+    "max": 100
+},
+"phase3_wait": {
+    "value": 0.1,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 3 animation frame wait time",
+    "min": 0.01,
+    "max": 0.5
+},
+"phase4_steps": {
+    "value": 60,
+    "type": int,
+    "unit": "steps",
+    "description": "Phase 4 duration: Bond breaking/forming",
+    "min": 20,
+    "max": 200
+},
+"phase4_wait": {
+    "value": 0.08,
+    "type": float,
+    "unit": "s",
+    "description": "Phase 4 animation frame wait time",
+    "min": 0.01,
+    "max": 0.5
+}
+```
+
+**Status:** ⚠️ Benötigt Refactoring (+6 Parameter)
+
+---
+
+### Zusammenfassung der Analyse
+
+**High-Priority Dateien:**
+- h2_md_full_refactored.py: +8 Parameter (14 → 22)
+- nh3_inversion.py: +9 Parameter (5 → 14)
+- h3_reaction_pathway.py: +6 Parameter (9 → 15)
+
+**Gesamt:** +23 neue Parameter für 3 High-Priority Dateien
+
+**Muster:**
+- Alle Dateien verwenden `range()` Schleifen für Phasen-Dauern
+- Alle Dateien verwenden `self.wait()` für Animation-Timing
+- Typische Muster:
+  - `phase_steps`: MD-Simulationsschritte oder Animations-Frames
+  - `phase_wait`: Frame-Wartezeit für Visualisierung
+  - Verhältnis: kleinere `wait` → schnellere Animation, größere `steps` → längere Phase
+
+**Vorteile der Parametrisierung:**
+1. Schnelle Demo-Modus (weniger steps, kürzere waits)
+2. Detaillierte Präsentation (mehr steps, längere waits für Didaktik)
+3. Publikations-Qualität (viele steps, optimierte waits für video rendering)
+4. Debugging (sehr wenige steps für schnelles Testen)
+
+---
+
+**Stand:** 2025-11-06
 **Analysiert von:** Claude Code
 **Basierend auf:** claude.md Zeilen 93-309 (Architecture Requirements: GUI Tool Compatibility)
