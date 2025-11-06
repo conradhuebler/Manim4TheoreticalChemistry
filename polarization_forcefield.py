@@ -384,6 +384,23 @@ class PolarizationForceField(Scene):
             "description": "Minimum partial charge in polarizable model",
             "min": 0.0,
             "max": 1.0
+        },
+        # Animation parameters
+        "total_time": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 60.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
         }
     }
 
@@ -436,6 +453,10 @@ class PolarizationForceField(Scene):
         self.distance_decay = self.PARAMETERS["distance_decay"]["value"]
         self.max_charge = self.PARAMETERS["max_charge"]["value"]
         self.min_charge = self.PARAMETERS["min_charge"]["value"]
+
+        # Animation parameters
+        self.total_time = self.PARAMETERS["total_time"]["value"]
+        self.fps = self.PARAMETERS["fps"]["value"]
 
     def create_scenario_labels(self):
         """Create labels for both scenarios"""
@@ -836,9 +857,8 @@ class PolarizationForceField(Scene):
 
     def run_simulation(self):
         """Run the molecular dynamics simulation"""
-        frame_dt = 1/30  # Animation frame rate
-        total_time = 10.0  # seconds
-        frames = int(total_time / frame_dt)
+        frame_dt = 1/self.fps  # Animation frame rate
+        frames = int(self.total_time / frame_dt)
 
         for frame in range(frames):
             # Run multiple MD steps per frame (all atoms can move now)

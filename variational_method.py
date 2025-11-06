@@ -230,6 +230,26 @@ class VariationalMethod(Scene):
             "description": "Number of points for wavefunction discretization",
             "min": 50,
             "max": 1000
+        },
+
+        # ========================================================================
+        # ANIMATION PARAMETERS
+        # ========================================================================
+        "duration": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 60.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
         }
     }
 
@@ -256,6 +276,10 @@ class VariationalMethod(Scene):
         x_max = self.PARAMETERS["x_range_max"]["value"]
         n_pts = self.PARAMETERS["n_points"]["value"]
         self.x_range = np.linspace(x_min, x_max, n_pts)
+
+        # Animation parameters
+        self.duration = self.PARAMETERS["duration"]["value"]
+        self.fps = self.PARAMETERS["fps"]["value"]
 
         # Layout positions (internal, not parameters)
         self.wavefunction_center = LEFT * 3.5
@@ -552,9 +576,7 @@ class VariationalMethod(Scene):
         delta_E_display.set_value(E_init - self.E0)
 
         # Animation loop: vary α from 0.3 to 3.0
-        duration = 10.0
-        fps = 30
-        frames = int(duration * fps)
+        frames = int(self.duration * self.fps)
 
         alpha_values = np.linspace(0.3, 3.0, frames)
 
@@ -591,7 +613,7 @@ class VariationalMethod(Scene):
             alpha_display.set_color(color)
             E_display.set_color(color)
 
-            self.wait(1/fps)
+            self.wait(1/self.fps)
 
         self.wait(3)
 
