@@ -46,7 +46,7 @@ class MyAnimation(Scene):
 | `geometry_optimization.py` | ✅ | Class-level `PARAMETERS` dictionary | 9 Parameter: x_min, x_max, convergence_threshold, max_iterations, max_step_size, lm_lambda, backtrack_alpha, backtrack_c, max_backtrack_iter |
 | `quantum_dynamics_manim.py` | ✅ | Class-level `PARAMETERS` dictionary | 10 Parameter: active_scenario, length, mass, width, npoints, dt, snapshot_freq, fps, x_plot_range, vis_downsample |
 | `quantum_nonlocality.py` | ✅ | Class-level `PARAMETERS` dictionary | 1 Parameter: box_length |
-| `variational_method.py` | ✅ | Class-level `PARAMETERS` dictionary | 6 Parameter: hbar, mass, omega, x_range_min, x_range_max, n_points |
+| `variational_method.py` | ✅ | Class-level `PARAMETERS` dictionary | 8 Parameter: hbar, mass, omega, x_range_min, x_range_max, n_points, duration, fps |
 
 ### Monte Carlo & Sampling
 
@@ -63,8 +63,9 @@ class MyAnimation(Scene):
 |-------|--------|---------------------|-------------|
 | `metadynamics_visualization.py` | ✅ | Class-level `PARAMETERS` dictionary | 37 Parameter: 6 phases (with configurable durations), temperature ramp, metadynamics enhanced sampling, harmonic/double-well potentials |
 | `pca_molecular_dynamics.py` | ✅ | Class-level `PARAMETERS` dictionary | 9 Parameter: PCA trajectory analysis, drift + oscillation, visualization scaling |
+| `polymer_monte_carlo.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: Preset system + animation phases (phase1-3_steps/wait) |
 | `particle_interactions_combinatorics.py` | ✅ | Class-level `PARAMETERS` dictionary | 7 Parameter: Educational animation, combinatorial growth, water molecule example |
-| `polarization_forcefield.py` | ✅ | Class-level `PARAMETERS` dictionary | 13 Parameter: MD simulation, polarizable force fields, LJ potential with Berendsen thermostat |
+| `polarization_forcefield.py` | ✅ | Class-level `PARAMETERS` dictionary | 15 Parameter: MD simulation, polarizable force fields, LJ potential with Berendsen thermostat, total_time, fps |
 
 ## Zusammenfassung
 
@@ -908,6 +909,41 @@ class BondStretching(Scene):
 **Gesamt:** +23 neue Parameter für 3 High-Priority Dateien
 
 **🎉 ALLE 3 HIGH-PRIORITY DATEIEN REFACTORED! 🎉**
+
+### Medium-Priority Dateien (⭐⭐)
+
+#### 1. polymer_monte_carlo.py (2 → 7 Parameter)
+**Status:** ✅ Refactoring abgeschlossen (+5 Parameter)
+
+**Hinzugefügte Parameter:**
+- phase1_steps (10), phase1_wait (3.5s) - Slow demo phase
+- phase2_steps (80), phase2_wait (0.02s) - Medium speed warmup
+- phase3_wait (0.0001s) - Fast thermalization
+
+#### 2. variational_method.py (6 → 8 Parameter)
+**Status:** ✅ Refactoring abgeschlossen (+2 Parameter)
+
+**Hinzugefügte Parameter:**
+- duration (10.0s) - Total animation duration
+- fps (30) - Frames per second
+
+#### 3. polarization_forcefield.py (13 → 15 Parameter)
+**Status:** ✅ Refactoring abgeschlossen (+2 Parameter)
+
+**Hinzugefügte Parameter:**
+- total_time (10.0s) - Total animation duration
+- fps (30) - Frames per second
+
+**🎉 ALLE 3 MEDIUM-PRIORITY DATEIEN REFACTORED! 🎉**
+
+---
+
+### Gesamtstatistik
+
+**High-Priority (⭐⭐⭐):** 3 Dateien, +23 Parameter
+**Medium-Priority (⭐⭐):** 3 Dateien, +9 Parameter
+
+**GRAND TOTAL: 6 Dateien refactored, +32 neue Zeit/FPS Parameter! 🚀**
 
 **Muster:**
 - Alle Dateien verwenden `range()` Schleifen für Phasen-Dauern
