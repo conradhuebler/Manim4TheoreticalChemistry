@@ -225,6 +225,74 @@ class H2MDFull(Scene):
             "description": "Disable sliding window for didactic purposes (show full history)",
             "min": None,
             "max": None
+        },
+
+        # ========================================================================
+        # PHASE DURATION PARAMETERS
+        # ========================================================================
+        "phase1_steps": {
+            "value": 200,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 1 duration: Free H-atoms in box",
+            "min": 50,
+            "max": 1000
+        },
+        "phase1_wait": {
+            "value": 0.004,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 1 animation frame wait time",
+            "min": 0.001,
+            "max": 0.1
+        },
+        "phase2_steps": {
+            "value": 800,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: Two H-atoms with interaction",
+            "min": 200,
+            "max": 2000
+        },
+        "phase2_wait": {
+            "value": 0.001,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 2 animation frame wait time",
+            "min": 0.0001,
+            "max": 0.01
+        },
+        "phase4_steps": {
+            "value": 200,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 4 duration: H₂ formation (per loop)",
+            "min": 50,
+            "max": 1000
+        },
+        "phase4_wait": {
+            "value": 0.02,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 4 animation frame wait time",
+            "min": 0.001,
+            "max": 0.1
+        },
+        "phase5_steps": {
+            "value": 200,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 5 duration: H₂ dissociation",
+            "min": 50,
+            "max": 1000
+        },
+        "phase5_wait": {
+            "value": 0.005,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 5 animation frame wait time",
+            "min": 0.001,
+            "max": 0.05
         }
     }
 
@@ -271,6 +339,16 @@ class H2MDFull(Scene):
         self.plot_time_window = self.PARAMETERS["plot_time_window"]["value"]
         self.min_points_for_snake = self.PARAMETERS["min_points_for_snake"]["value"]
         self.disable_sliding_window = self.PARAMETERS["disable_sliding_window"]["value"]
+
+        # Phase duration parameters
+        self.phase1_steps = self.PARAMETERS["phase1_steps"]["value"]
+        self.phase1_wait = self.PARAMETERS["phase1_wait"]["value"]
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.phase2_wait = self.PARAMETERS["phase2_wait"]["value"]
+        self.phase4_steps = self.PARAMETERS["phase4_steps"]["value"]
+        self.phase4_wait = self.PARAMETERS["phase4_wait"]["value"]
+        self.phase5_steps = self.PARAMETERS["phase5_steps"]["value"]
+        self.phase5_wait = self.PARAMETERS["phase5_wait"]["value"]
 
         # Initialize single H-atom (initial conditions, not parameters)
         self.h1_pos = np.array([0.0, 0.0])  # x, y position
@@ -732,7 +810,7 @@ class H2MDFull(Scene):
         self.play(Transform(self.current_phase_label, phase_text))
 
         # Run MD for single atom
-        for step in range(200):  # About 20 fs
+        for step in range(self.phase1_steps):
             # Update H1 atom
             def h1_forces(pos):
                 return self.box_force(pos)
@@ -760,7 +838,7 @@ class H2MDFull(Scene):
             if step % 1 == 0:
                 self.update_h_atom_visualization(1)
                 self.update_plots()
-                self.wait(0.004)
+                self.wait(self.phase1_wait)
 
         self.wait(1)
 
@@ -791,7 +869,7 @@ class H2MDFull(Scene):
         self.play(ShowCreation(self.h2_group))
 
         # Run MD for both atoms
-        for step in range(800):  # About 150 fs
+        for step in range(self.phase2_steps):
             # Forces on H1
             def h1_forces(pos):
                 box_f = self.box_force(pos)
@@ -841,7 +919,7 @@ class H2MDFull(Scene):
                 self.update_h_atom_visualization(1)
                 self.update_h_atom_visualization(2)
                 self.update_plots()
-                self.wait(0.001)
+                self.wait(self.phase2_wait)
 
         self.wait(2)
 
@@ -945,7 +1023,7 @@ class H2MDFull(Scene):
         self.v_h2 = 0.05  # Small initial velocity
 
         # Show harmonic approximation after some Morse motion
-        for step in range(200):
+        for step in range(self.phase4_steps):
             # Morse potential dynamics
             F_morse = -2 * self.D_e * self.alpha * (1 - np.exp(-self.alpha * (self.r_h2 - self.r_e))) * np.exp(-self.alpha * (self.r_h2 - self.r_e))
 
@@ -1000,8 +1078,8 @@ class H2MDFull(Scene):
             new_value_displays.move_to(self.potential_plot_center + RIGHT * 2.5)
 
             # Update plots - slow down animation for better tracking
-            if step % 1 == 0:  # Update every 4 steps instead of 8
-                self.wait(0.02)  # Slower animation (0.08 instead of 0.03)
+            if step % 1 == 0:
+                self.wait(self.phase4_wait)
 
         # Show harmonic approximation explanation
         harmonic_explanation = VGroup(
@@ -1032,7 +1110,7 @@ class H2MDFull(Scene):
         self.play(FadeOut(harmonic_group))
 
         # Continue with motion showing both potentials
-        for step in range(200):
+        for step in range(self.phase4_steps):
             # Morse potential dynamics
             F_morse = -2 * self.D_e * self.alpha * (1 - np.exp(-self.alpha * (self.r_h2 - self.r_e))) * np.exp(-self.alpha * (self.r_h2 - self.r_e))
 
@@ -1087,8 +1165,8 @@ class H2MDFull(Scene):
             new_value_displays.move_to(self.potential_plot_center + RIGHT * 2.5)
 
             # Update plots - slow down animation for better tracking
-            if step % 1 == 0:  # Update every 4 steps instead of 8
-                self.wait(0.02)  # Slower animation (0.08 instead of 0.03)
+            if step % 1 == 0:
+                self.wait(self.phase4_wait)
 
         # Add bond line
         self.bond_line = Line(
@@ -1111,7 +1189,7 @@ class H2MDFull(Scene):
         self.v_h2 = 2  # Higher velocity to overcome potential barrier
 
         # Dissociation sequence
-        for step in range(200):  # More steps for smooth dissociation
+        for step in range(self.phase5_steps):
             # Morse potential dynamics
             F_morse = -2 * self.D_e * self.alpha * (1 - np.exp(-self.alpha * (self.r_h2 - self.r_e))) * np.exp(-self.alpha * (self.r_h2 - self.r_e))
 
@@ -1170,7 +1248,7 @@ class H2MDFull(Scene):
                 self.play(FadeOut(self.bond_line), run_time=0.5)
             # Update plots with smoother animation
             if step % 1 == 0:
-                self.wait(0.005)  # Smoother animation
+                self.wait(self.phase5_wait)
 
         # After dissociation, show atoms as free
         self.play(

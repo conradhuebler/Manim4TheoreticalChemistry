@@ -141,6 +141,58 @@ class H3ReactionPathway(Scene):
         },
 
         # ========================================================================
+        # PHASE DURATION PARAMETERS
+        # ========================================================================
+        "phase2_steps": {
+            "value": 60,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: H₂ approaching center",
+            "min": 20,
+            "max": 200
+        },
+        "phase2_wait": {
+            "value": 0.08,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 2 animation frame wait time",
+            "min": 0.01,
+            "max": 0.5
+        },
+        "phase3_steps": {
+            "value": 40,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 3 duration: Transition state [H₃]‡",
+            "min": 10,
+            "max": 100
+        },
+        "phase3_wait": {
+            "value": 0.1,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 3 animation frame wait time",
+            "min": 0.01,
+            "max": 0.5
+        },
+        "phase4_steps": {
+            "value": 60,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 4 duration: Bond breaking/forming",
+            "min": 20,
+            "max": 200
+        },
+        "phase4_wait": {
+            "value": 0.08,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 4 animation frame wait time",
+            "min": 0.01,
+            "max": 0.5
+        },
+
+        # ========================================================================
         # ATOM POSITIONS (fixed positions for visualization)
         # ========================================================================
         "x_h1": {
@@ -197,6 +249,14 @@ class H3ReactionPathway(Scene):
 
         # Simulation parameters
         self.dt = self.PARAMETERS["dt"]["value"]
+
+        # Phase duration parameters
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.phase2_wait = self.PARAMETERS["phase2_wait"]["value"]
+        self.phase3_steps = self.PARAMETERS["phase3_steps"]["value"]
+        self.phase3_wait = self.PARAMETERS["phase3_wait"]["value"]
+        self.phase4_steps = self.PARAMETERS["phase4_steps"]["value"]
+        self.phase4_wait = self.PARAMETERS["phase4_wait"]["value"]
 
         # Atom positions
         self.x_h1 = self.PARAMETERS["x_h1"]["value"]
@@ -617,7 +677,7 @@ class H3ReactionPathway(Scene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move H2 from -0.7 to -0.1 (approaching center)
-        for step in range(60):
+        for step in range(self.phase2_steps):
             progress = step / 60
             self.x_h2 = -0.7 + 0.6 * progress
 
@@ -641,7 +701,7 @@ class H3ReactionPathway(Scene):
             self.energy_data.append(self.get_current_energy())
 
             if step % 5 == 0:
-                self.wait(0.08)
+                self.wait(self.phase2_wait)
 
     def phase_3_transition_state(self):
         """Phase 3: Transition state [H3]‡"""
@@ -650,7 +710,7 @@ class H3ReactionPathway(Scene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move H2 from -0.1 to +0.1 (through transition state)
-        for step in range(40):
+        for step in range(self.phase3_steps):
             progress = step / 40
             self.x_h2 = -0.1 + 0.1 * progress
 
@@ -669,7 +729,7 @@ class H3ReactionPathway(Scene):
             self.energy_data.append(self.get_current_energy())
 
             if step % 3 == 0:
-                self.wait(0.1)
+                self.wait(self.phase3_wait)
 
         # Pause at transition state
         self.wait(1)
@@ -681,7 +741,7 @@ class H3ReactionPathway(Scene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move H2 from +0.1 to +0.7 (toward H3)
-        for step in range(60):
+        for step in range(self.phase4_steps):
             progress = step / 60
             self.x_h2 = 0.1 + 0.6 * progress
 
@@ -701,7 +761,7 @@ class H3ReactionPathway(Scene):
             self.energy_data.append(self.get_current_energy())
 
             if step % 5 == 0:
-                self.wait(0.08)
+                self.wait(self.phase4_wait)
 
     def phase_5_products(self):
         """Phase 5: Final products H1 + H2-H3"""

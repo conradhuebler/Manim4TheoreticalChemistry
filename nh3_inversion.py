@@ -98,6 +98,82 @@ class NH3Inversion(ThreeDScene):
             "description": "Animation time step",
             "min": 0.01,
             "max": 0.1
+        },
+
+        # ========================================================================
+        # PHASE DURATION PARAMETERS
+        # ========================================================================
+        "phase2_steps": {
+            "value": 60,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: Approaching barrier",
+            "min": 20,
+            "max": 200
+        },
+        "phase2_wait": {
+            "value": 0.05,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 2 animation frame wait time",
+            "min": 0.01,
+            "max": 0.2
+        },
+        "phase3_steps": {
+            "value": 40,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 3 duration: Barrier crossing",
+            "min": 10,
+            "max": 100
+        },
+        "phase3_wait": {
+            "value": 0.05,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 3 animation frame wait time",
+            "min": 0.01,
+            "max": 0.2
+        },
+        "phase4_steps": {
+            "value": 60,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 4 duration: Inverted state",
+            "min": 20,
+            "max": 200
+        },
+        "phase4_wait": {
+            "value": 0.05,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 4 animation frame wait time",
+            "min": 0.01,
+            "max": 0.2
+        },
+        "phase5_cycles": {
+            "value": 3,
+            "type": int,
+            "unit": "cycles",
+            "description": "Number of oscillation cycles",
+            "min": 1,
+            "max": 10
+        },
+        "phase5_steps": {
+            "value": 80,
+            "type": int,
+            "unit": "steps",
+            "description": "Steps per oscillation half-period",
+            "min": 20,
+            "max": 200
+        },
+        "phase5_wait": {
+            "value": 0.03,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 5 animation frame wait time",
+            "min": 0.01,
+            "max": 0.1
         }
     }
 
@@ -110,6 +186,17 @@ class NH3Inversion(ThreeDScene):
         self.h_radius = self.PARAMETERS["h_radius"]["value"]
         self.dt = self.PARAMETERS["dt"]["value"]
         self.z_nitrogen = self.PARAMETERS["z_nitrogen_initial"]["value"]
+
+        # Phase duration parameters
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.phase2_wait = self.PARAMETERS["phase2_wait"]["value"]
+        self.phase3_steps = self.PARAMETERS["phase3_steps"]["value"]
+        self.phase3_wait = self.PARAMETERS["phase3_wait"]["value"]
+        self.phase4_steps = self.PARAMETERS["phase4_steps"]["value"]
+        self.phase4_wait = self.PARAMETERS["phase4_wait"]["value"]
+        self.phase5_cycles = self.PARAMETERS["phase5_cycles"]["value"]
+        self.phase5_steps = self.PARAMETERS["phase5_steps"]["value"]
+        self.phase5_wait = self.PARAMETERS["phase5_wait"]["value"]
 
         # Setup NH3 molecular geometry
         self.setup_parameters()
@@ -404,7 +491,7 @@ class NH3Inversion(ThreeDScene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move N from z = +0.4 to z = +0.1
-        for step in range(60):
+        for step in range(self.phase2_steps):
             progress = step / 60
             self.z_nitrogen = 0.4 - 0.3 * progress
 
@@ -419,7 +506,7 @@ class NH3Inversion(ThreeDScene):
             self.energy_data.append(self.inversion_potential(self.z_nitrogen))
 
             if step % 5 == 0:
-                self.wait(0.05)
+                self.wait(self.phase2_wait)
 
     def phase_3_barrier_crossing(self):
         """Phase 3: Classical crossing over the barrier"""
@@ -432,7 +519,7 @@ class NH3Inversion(ThreeDScene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Classical transition through z = 0 (over the barrier, not through it)
-        for step in range(40):
+        for step in range(self.phase3_steps):
             progress = step / 40
             self.z_nitrogen = 0.1 - 0.2 * progress  # From +0.1 to -0.1
 
@@ -447,7 +534,7 @@ class NH3Inversion(ThreeDScene):
             self.energy_data.append(self.inversion_potential(self.z_nitrogen))
 
             if step % 3 == 0:
-                self.wait(0.05)
+                self.wait(self.phase3_wait)
 
     def phase_4_inverted_state(self):
         """Phase 4: Inverted pyramidal state (N below H₃ plane)"""
@@ -460,7 +547,7 @@ class NH3Inversion(ThreeDScene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move N from z = -0.1 to z = -0.4
-        for step in range(60):
+        for step in range(self.phase4_steps):
             progress = step / 60
             self.z_nitrogen = -0.1 - 0.3 * progress
 
@@ -475,7 +562,7 @@ class NH3Inversion(ThreeDScene):
             self.energy_data.append(self.inversion_potential(self.z_nitrogen))
 
             if step % 5 == 0:
-                self.wait(0.05)
+                self.wait(self.phase4_wait)
 
         # Pause at inverted state
         self.wait(1)
@@ -491,9 +578,9 @@ class NH3Inversion(ThreeDScene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Oscillate between z = -0.4 and z = +0.4 several times
-        for cycle in range(3):
+        for cycle in range(self.phase5_cycles):
             # Return journey: -0.4 → +0.4
-            for step in range(80):
+            for step in range(self.phase5_steps):
                 progress = step / 80
                 self.z_nitrogen = -0.4 + 0.8 * progress
 
@@ -508,10 +595,10 @@ class NH3Inversion(ThreeDScene):
                 self.energy_data.append(self.inversion_potential(self.z_nitrogen))
 
                 if step % 4 == 0:
-                    self.wait(0.03)
+                    self.wait(self.phase5_wait)
 
             # Forward journey: +0.4 → -0.4
-            for step in range(80):
+            for step in range(self.phase5_steps):
                 progress = step / 80
                 self.z_nitrogen = 0.4 - 0.8 * progress
 
@@ -526,4 +613,4 @@ class NH3Inversion(ThreeDScene):
                 self.energy_data.append(self.inversion_potential(self.z_nitrogen))
 
                 if step % 4 == 0:
-                    self.wait(0.03)
+                    self.wait(self.phase5_wait)
