@@ -172,6 +172,88 @@ def get_string(key):
 
 
 class PCAMolecularDynamics(Scene):
+    """PCA visualization for molecular dynamics with trajectory analysis."""
+
+    PARAMETERS = {
+        # Time parameters
+        "t_max": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Maximum time for trajectory",
+            "min": 1.0,
+            "max": 20.0
+        },
+        "n_points": {
+            "value": 200,
+            "type": int,
+            "unit": "-",
+            "description": "Number of trajectory points",
+            "min": 50,
+            "max": 500
+        },
+        # Drift velocity (linear motion)
+        "drift_velocity_x": {
+            "value": 1.0,
+            "type": float,
+            "unit": "units/s",
+            "description": "Drift velocity in x direction",
+            "min": 0.0,
+            "max": 5.0
+        },
+        "drift_velocity_y": {
+            "value": 1.0,
+            "type": float,
+            "unit": "units/s",
+            "description": "Drift velocity in y direction",
+            "min": 0.0,
+            "max": 5.0
+        },
+        # Oscillation parameters
+        "amplitude": {
+            "value": 1.5,
+            "type": float,
+            "unit": "units",
+            "description": "Oscillation amplitude",
+            "min": 0.1,
+            "max": 5.0
+        },
+        "omega": {
+            "value": 2 * np.pi * 0.8,
+            "type": float,
+            "unit": "rad/s",
+            "description": "Angular frequency of oscillation",
+            "min": 0.1,
+            "max": 20.0
+        },
+        # Oscillation direction (will be normalized)
+        "oscillation_dir_x": {
+            "value": -1.0,
+            "type": float,
+            "unit": "-",
+            "description": "Oscillation direction x component (normalized later)",
+            "min": -1.0,
+            "max": 1.0
+        },
+        "oscillation_dir_y": {
+            "value": 1.0,
+            "type": float,
+            "unit": "-",
+            "description": "Oscillation direction y component (normalized later)",
+            "min": -1.0,
+            "max": 1.0
+        },
+        # Visualization
+        "viz_scale": {
+            "value": 0.5,
+            "type": float,
+            "unit": "-",
+            "description": "Scale factor for displaying coordinates",
+            "min": 0.1,
+            "max": 2.0
+        }
+    }
+
     def construct(self):
         # Setup parameters
         self.setup_parameters()
@@ -204,26 +286,36 @@ class PCAMolecularDynamics(Scene):
         self.wait(3)
 
     def setup_parameters(self):
-        """Setup trajectory and PCA parameters"""
-        # Time parameters
-        self.t_max = 10.0
-        self.n_points = 200
+        """Setup trajectory and PCA parameters from PARAMETERS dictionary"""
+        # Extract time parameters
+        self.t_max = self.PARAMETERS["t_max"]["value"]
+        self.n_points = self.PARAMETERS["n_points"]["value"]
         self.t_values = np.linspace(0, self.t_max, self.n_points)
 
-        # Trajectory: x(t) = t * [1, 1] + A * sin(ω*t) * [-1, 1]/√2
-        self.drift_velocity = np.array([1.0, 1.0])
-        self.amplitude = 1.5
-        self.omega = 2 * np.pi * 0.8
-        self.oscillation_dir = np.array([-1.0, 1.0]) / np.sqrt(2)
+        # Extract drift velocity components
+        drift_x = self.PARAMETERS["drift_velocity_x"]["value"]
+        drift_y = self.PARAMETERS["drift_velocity_y"]["value"]
+        self.drift_velocity = np.array([drift_x, drift_y])
+
+        # Extract oscillation parameters
+        self.amplitude = self.PARAMETERS["amplitude"]["value"]
+        self.omega = self.PARAMETERS["omega"]["value"]
+
+        # Extract and normalize oscillation direction
+        osc_x = self.PARAMETERS["oscillation_dir_x"]["value"]
+        osc_y = self.PARAMETERS["oscillation_dir_y"]["value"]
+        osc_dir = np.array([osc_x, osc_y])
+        # Normalize oscillation direction
+        self.oscillation_dir = osc_dir / np.linalg.norm(osc_dir)
+
+        # Visualization scale
+        self.viz_scale = self.PARAMETERS["viz_scale"]["value"]
 
         # Generate trajectory
         self.generate_trajectory()
 
         # Perform PCA
         self.perform_pca()
-
-        # Visualization scale
-        self.viz_scale = 0.5  # Scale for displaying coordinates
 
     def generate_trajectory(self):
         """Generate 2D trajectory: linear drift + orthogonal oscillation

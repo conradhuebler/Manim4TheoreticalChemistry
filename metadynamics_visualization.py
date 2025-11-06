@@ -65,6 +65,237 @@ def get_string(key):
 
 
 class MetadynamicsVisualization(Scene):
+    """Metadynamics enhanced sampling visualization with 6 phases."""
+
+    PARAMETERS = {
+        # Particle count
+        "n_particles": {
+            "value": 5,
+            "type": int,
+            "unit": "-",
+            "description": "Number of particles in simulation",
+            "min": 1,
+            "max": 10
+        },
+        # Harmonic potential parameters (Phase 2)
+        "harmonic_k": {
+            "value": 5.0,
+            "type": float,
+            "unit": "kcal/(mol·Å²)",
+            "description": "Spring constant for harmonic potential",
+            "min": 0.1,
+            "max": 20.0
+        },
+        "harmonic_center": {
+            "value": -0.97,
+            "type": float,
+            "unit": "Å",
+            "description": "Center of harmonic well (matches double-well local min)",
+            "min": -2.0,
+            "max": 2.0
+        },
+        # Double-well potential parameters
+        "pot_a": {
+            "value": 3.0,
+            "type": float,
+            "unit": "kcal/mol/Å⁴",
+            "description": "Double-well parameter a in V(x)=a*(x²-b)²+c*x",
+            "min": 0.1,
+            "max": 10.0
+        },
+        "pot_b": {
+            "value": 1.0,
+            "type": float,
+            "unit": "Å²",
+            "description": "Double-well parameter b in V(x)=a*(x²-b)²+c*x",
+            "min": 0.1,
+            "max": 5.0
+        },
+        "pot_c": {
+            "value": -0.7,
+            "type": float,
+            "unit": "kcal/mol/Å",
+            "description": "Double-well parameter c (asymmetry) in V(x)=a*(x²-b)²+c*x",
+            "min": -2.0,
+            "max": 2.0
+        },
+        # Y-confinement parameters
+        "k_y_weak": {
+            "value": 1.0,
+            "type": float,
+            "unit": "kcal/(mol·Å²)",
+            "description": "Weak y-confinement for Phase 0",
+            "min": 0.0,
+            "max": 10.0
+        },
+        "k_y_strong": {
+            "value": 5.0,
+            "type": float,
+            "unit": "kcal/(mol·Å²)",
+            "description": "Strong y-confinement for Phase 1+",
+            "min": 1.0,
+            "max": 20.0
+        },
+        # Harmonic wall parameters
+        "wall_k": {
+            "value": 200.0,
+            "type": float,
+            "unit": "kcal/(mol·Å²)",
+            "description": "Strength of harmonic walls at box boundaries",
+            "min": 50.0,
+            "max": 500.0
+        },
+        "wall_x_min": {
+            "value": -2.22,
+            "type": float,
+            "unit": "Å",
+            "description": "Left wall position",
+            "min": -5.0,
+            "max": 0.0
+        },
+        "wall_x_max": {
+            "value": 2.22,
+            "type": float,
+            "unit": "Å",
+            "description": "Right wall position",
+            "min": 0.0,
+            "max": 5.0
+        },
+        "wall_y_min": {
+            "value": -2.33,
+            "type": float,
+            "unit": "Å",
+            "description": "Bottom wall position",
+            "min": -5.0,
+            "max": 0.0
+        },
+        "wall_y_max": {
+            "value": 14.33,
+            "type": float,
+            "unit": "Å",
+            "description": "Top wall position",
+            "min": 5.0,
+            "max": 20.0
+        },
+        # Lennard-Jones parameters
+        "epsilon_lj": {
+            "value": 0.02,
+            "type": float,
+            "unit": "kcal/mol",
+            "description": "LJ well depth (reduced for stability)",
+            "min": 0.0,
+            "max": 0.1
+        },
+        "sigma_lj": {
+            "value": 0.01,
+            "type": float,
+            "unit": "Å",
+            "description": "LJ sigma parameter",
+            "min": 0.001,
+            "max": 0.1
+        },
+        "cutoff_lj": {
+            "value": 1.0,
+            "type": float,
+            "unit": "Å",
+            "description": "LJ cutoff distance",
+            "min": 0.5,
+            "max": 3.0
+        },
+        # MD parameters
+        "mass": {
+            "value": 10.0,
+            "type": float,
+            "unit": "amu",
+            "description": "Particle mass",
+            "min": 1.0,
+            "max": 100.0
+        },
+        "dt": {
+            "value": 0.05,
+            "type": float,
+            "unit": "fs",
+            "description": "MD timestep",
+            "min": 0.001,
+            "max": 0.5
+        },
+        "max_velocity": {
+            "value": 0.2,
+            "type": float,
+            "unit": "Å/fs",
+            "description": "Velocity clamp (unused, legacy)",
+            "min": 0.1,
+            "max": 1.0
+        },
+        # Thermostat parameters
+        "temperature": {
+            "value": 300.0,
+            "type": float,
+            "unit": "K",
+            "description": "Berendsen thermostat target temperature",
+            "min": 50.0,
+            "max": 500.0
+        },
+        "k_B": {
+            "value": 0.001987,
+            "type": float,
+            "unit": "kcal/(mol·K)",
+            "description": "Boltzmann constant",
+            "min": 0.001,
+            "max": 0.01
+        },
+        "tau_berendsen": {
+            "value": 1.0,
+            "type": float,
+            "unit": "fs",
+            "description": "Berendsen coupling time constant",
+            "min": 0.1,
+            "max": 10.0
+        },
+        # Metadynamics parameters
+        "gaussian_height": {
+            "value": 0.08,
+            "type": float,
+            "unit": "kcal/mol",
+            "description": "Height of deposited Gaussians",
+            "min": 0.01,
+            "max": 0.5
+        },
+        "gaussian_width": {
+            "value": 0.25,
+            "type": float,
+            "unit": "Å",
+            "description": "Width (σ) of deposited Gaussians",
+            "min": 0.05,
+            "max": 1.0
+        },
+        "gaussian_frequency": {
+            "value": 100,
+            "type": int,
+            "unit": "steps",
+            "description": "Add Gaussian every N MD steps",
+            "min": 10,
+            "max": 500
+        },
+        # Visualization scaling
+        "pot_x_scale": {
+            "value": 1.8,
+            "type": float,
+            "unit": "-",
+            "description": "Scale factor for x-coordinates in potential plot",
+            "min": 0.5,
+            "max": 5.0
+        },
+        "pot_y_scale": {
+            "value": 0.6,
+            "type": float,
+            "unit": "-",
+            "description": "Scale factor for potential energy in plot",
+            "min": 0.1,
+            "max": 2.0
+        }
+    }
+
     def construct(self):
         # Setup
         self.setup_parameters()
@@ -110,56 +341,59 @@ class MetadynamicsVisualization(Scene):
         self.wait(3)
 
     def setup_parameters(self):
-        """Initialize all simulation parameters"""
-        # Number of particles
-        self.n_particles = 5
+        """Initialize all simulation parameters from PARAMETERS dictionary"""
+        # Extract parameters from central dictionary
+        self.n_particles = self.PARAMETERS["n_particles"]["value"]
 
-        # Harmonic potential parameters (for Phase 0)
-        self.harmonic_k = 5.0  # Spring constant
-        self.harmonic_center = -0.97  # Center of harmonic well (matches double-well local min)
+        # Harmonic potential parameters
+        self.harmonic_k = self.PARAMETERS["harmonic_k"]["value"]
+        self.harmonic_center = self.PARAMETERS["harmonic_center"]["value"]
 
-        # Double-well potential in x: V(x) = a*(x²-b)² + c*x
-        # Creates double-well with local min at x≈-0.97, global at x≈1.03
-        self.pot_a = 3.0
-        self.pot_b = 1.0
-        self.pot_c = -0.7
+        # Double-well potential parameters
+        self.pot_a = self.PARAMETERS["pot_a"]["value"]
+        self.pot_b = self.PARAMETERS["pot_b"]["value"]
+        self.pot_c = self.PARAMETERS["pot_c"]["value"]
 
-        # Potential type control
+        # Y-confinement parameters
+        self.k_y_weak = self.PARAMETERS["k_y_weak"]["value"]
+        self.k_y_strong = self.PARAMETERS["k_y_strong"]["value"]
+
+        # Harmonic wall parameters
+        self.wall_k = self.PARAMETERS["wall_k"]["value"]
+        self.wall_x_min = self.PARAMETERS["wall_x_min"]["value"]
+        self.wall_x_max = self.PARAMETERS["wall_x_max"]["value"]
+        self.wall_y_min = self.PARAMETERS["wall_y_min"]["value"]
+        self.wall_y_max = self.PARAMETERS["wall_y_max"]["value"]
+
+        # LJ parameters
+        self.epsilon_lj = self.PARAMETERS["epsilon_lj"]["value"]
+        self.sigma_lj = self.PARAMETERS["sigma_lj"]["value"]
+        self.cutoff_lj = self.PARAMETERS["cutoff_lj"]["value"]
+
+        # MD parameters
+        self.mass = self.PARAMETERS["mass"]["value"]
+        self.dt = self.PARAMETERS["dt"]["value"]
+        self.max_velocity = self.PARAMETERS["max_velocity"]["value"]
+
+        # Thermostat parameters
+        self.temperature = self.PARAMETERS["temperature"]["value"]
+        self.k_B = self.PARAMETERS["k_B"]["value"]
+        self.tau_berendsen = self.PARAMETERS["tau_berendsen"]["value"]
+
+        # Metadynamics parameters
+        self.gaussian_height = self.PARAMETERS["gaussian_height"]["value"]
+        self.gaussian_width = self.PARAMETERS["gaussian_width"]["value"]
+        self.gaussian_frequency = self.PARAMETERS["gaussian_frequency"]["value"]
+
+        # Visualization scaling
+        self.pot_x_scale = self.PARAMETERS["pot_x_scale"]["value"]
+        self.pot_y_scale = self.PARAMETERS["pot_y_scale"]["value"]
+
+        # Potential type control (state variables, not parameters)
         self.no_potential = True  # Phase 0: No external potential in x
         self.use_harmonic = True  # Start with harmonic, then switch to double-well
         self.morph_alpha = 0.0  # Interpolation parameter (0=harmonic, 1=double-well)
-
-        # Harmonic confinement in y to keep particles together
-        self.k_y_weak = 1.0  # Weak y-confinement for Phase 0
-        self.k_y_strong = 5.0  # Strong y-confinement for Phase 1+
         self.current_k_y = self.k_y_weak  # Start with weak confinement
-
-        # Harmonic wall parameters (at sim_box boundaries)
-        self.wall_k = 200.0  # Strength of harmonic walls (kcal/mol/Å²)
-        self.wall_x_min = -2.22  # sim_box width: ±4.0 screen / 1.8 scale = ±2.22 physics
-        self.wall_x_max = 2.22
-        self.wall_y_min = -2.33  # pot_origin to lower box edge: 0.7 screen / 0.3 scale
-        self.wall_y_max = 14.33  # pot_origin to upper box edge: 4.3 screen / 0.3 scale
-
-        # LJ parameters (reduced to avoid instability)
-        self.epsilon_lj = 0.02  # Enough to see interaction, not so much to cause explosions
-        self.sigma_lj = 0.01
-        self.cutoff_lj = 1.0
-
-        # MD parameters
-        self.mass = 10.0  # Moderate mass for visible dynamics
-        self.dt = 0.05  # Smaller timestep for stability
-        self.max_velocity = 0.2  # Clamp velocities
-
-        # Thermostat parameters (Berendsen)
-        self.temperature = 300.0  # K
-        self.k_B = 0.001987  # kcal/(mol·K)
-        self.tau_berendsen = 1.0  # Coupling time constant (fs)
-
-        # Metadynamics parameters
-        self.gaussian_height = 0.08
-        self.gaussian_width = 0.25
-        self.gaussian_frequency = 100  # Add Gaussian every N steps (reduced frequency for longer simulation)
 
         # Initialize particle positions distributed (for Phase 0: free movement)
         self.positions = np.zeros((self.n_particles, 2))
@@ -185,10 +419,6 @@ class MetadynamicsVisualization(Scene):
         # Tracking
         self.time_history = []
         self.cv_history = []
-
-        # Visualization scaling
-        self.pot_x_scale = 1.8  # Scale x-coordinates for potential plot
-        self.pot_y_scale = 0.6  # Scale y-coordinates for potential energy
 
     def create_title(self):
         """Create title"""
