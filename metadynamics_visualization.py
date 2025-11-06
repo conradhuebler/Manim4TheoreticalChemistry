@@ -293,6 +293,88 @@ class MetadynamicsVisualization(Scene):
             "description": "Scale factor for potential energy in plot",
             "min": 0.1,
             "max": 2.0
+        },
+        # Phase duration parameters (in MD steps)
+        "phase0_steps": {
+            "value": 600,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 0 duration: Free movement with only walls",
+            "min": 100,
+            "max": 2000
+        },
+        "phase1_steps": {
+            "value": 300,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 1 duration: Y-confinement activation",
+            "min": 100,
+            "max": 1000
+        },
+        "phase2_steps": {
+            "value": 900,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: Harmonic potential well",
+            "min": 300,
+            "max": 3000
+        },
+        "morph_steps": {
+            "value": 300,
+            "type": int,
+            "unit": "steps",
+            "description": "Morph duration: Harmonic to double-well transition",
+            "min": 100,
+            "max": 1000
+        },
+        "phase3_steps": {
+            "value": 1500,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 3 duration: Naive MD in double-well (trapped)",
+            "min": 500,
+            "max": 5000
+        },
+        "phase4_steps": {
+            "value": 6000,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 4 duration: Metadynamics exploration",
+            "min": 2000,
+            "max": 20000
+        },
+        # Temperature ramp parameters (Phase 3b)
+        "temp_initial": {
+            "value": 300.0,
+            "type": float,
+            "unit": "K",
+            "description": "Initial temperature for Phase 3b ramp",
+            "min": 100.0,
+            "max": 500.0
+        },
+        "temp_target": {
+            "value": 2000.0,
+            "type": float,
+            "unit": "K",
+            "description": "Target high temperature for Phase 3b",
+            "min": 500.0,
+            "max": 5000.0
+        },
+        "temp_ramp_steps": {
+            "value": 500,
+            "type": int,
+            "unit": "steps",
+            "description": "Duration of temperature ramp up/down",
+            "min": 100,
+            "max": 2000
+        },
+        "temp_equilibration_steps": {
+            "value": 1000,
+            "type": int,
+            "unit": "steps",
+            "description": "Equilibration time at high temperature",
+            "min": 200,
+            "max": 5000
         }
     }
 
@@ -388,6 +470,20 @@ class MetadynamicsVisualization(Scene):
         # Visualization scaling
         self.pot_x_scale = self.PARAMETERS["pot_x_scale"]["value"]
         self.pot_y_scale = self.PARAMETERS["pot_y_scale"]["value"]
+
+        # Phase duration parameters
+        self.phase0_steps = self.PARAMETERS["phase0_steps"]["value"]
+        self.phase1_steps = self.PARAMETERS["phase1_steps"]["value"]
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.morph_steps = self.PARAMETERS["morph_steps"]["value"]
+        self.phase3_steps = self.PARAMETERS["phase3_steps"]["value"]
+        self.phase4_steps = self.PARAMETERS["phase4_steps"]["value"]
+
+        # Temperature ramp parameters
+        self.temp_initial = self.PARAMETERS["temp_initial"]["value"]
+        self.temp_target = self.PARAMETERS["temp_target"]["value"]
+        self.temp_ramp_steps = self.PARAMETERS["temp_ramp_steps"]["value"]
+        self.temp_equilibration_steps = self.PARAMETERS["temp_equilibration_steps"]["value"]
 
         # Potential type control (state variables, not parameters)
         self.no_potential = True  # Phase 0: No external potential in x
@@ -1022,8 +1118,8 @@ class MetadynamicsVisualization(Scene):
         # Update heatmap to show only wall forces
         #self.update_force_heatmap()
 
-        # Run for 600 steps to see free movement
-        for _ in range(600):
+        # Run for configured number of steps to see free movement
+        for _ in range(self.phase0_steps):
             self.md_step()
 
             if self.step % 3 == 0:
@@ -1040,11 +1136,10 @@ class MetadynamicsVisualization(Scene):
         # Still no x-potential, but increase y-confinement
         self.no_potential = True
 
-        # Gradually increase y-confinement over 300 steps
-        steps_to_increase = 300
-        for i in range(steps_to_increase):
+        # Gradually increase y-confinement over configured steps
+        for i in range(self.phase1_steps):
             # Linearly interpolate k_y from weak to strong
-            alpha = i / steps_to_increase
+            alpha = i / self.phase1_steps
             self.current_k_y = (1 - alpha) * self.k_y_weak + alpha * self.k_y_strong
 
             self.md_step()
@@ -1072,8 +1167,8 @@ class MetadynamicsVisualization(Scene):
         # Update total potential curve to show harmonic well
         self.update_total_potential()
 
-        # Run for 900 steps (3x longer to see oscillations)
-        for _ in range(900):
+        # Run for configured number of steps to see oscillations
+        for _ in range(self.phase2_steps):
             self.md_step()
 
             if self.step % 3 == 0:
@@ -1087,11 +1182,10 @@ class MetadynamicsVisualization(Scene):
         phase_text.move_to(self.box_center + UP * 2.7)
         self.play(Transform(self.box_label, phase_text), run_time=1.5)
 
-        # Morph over 300 steps (2x longer for smoother transition)
-        morph_steps = 300
-        for i in range(morph_steps):
+        # Morph over configured steps for smoother transition
+        for i in range(self.morph_steps):
             # Update morph parameter
-            self.morph_alpha = i / morph_steps
+            self.morph_alpha = i / self.morph_steps
 
             # Update potential curve visualization
             new_curve = self.create_potential_curve(
@@ -1124,8 +1218,8 @@ class MetadynamicsVisualization(Scene):
         phase_text.move_to(self.box_center + UP * 2.7)
         self.play(Transform(self.box_label, phase_text), run_time=1.5)
 
-        # Run for 1500 steps (3x longer to clearly show particles are trapped)
-        for _ in range(1500):
+        # Run for configured number of steps to clearly show particles are trapped
+        for _ in range(self.phase3_steps):
             self.md_step()
 
             if self.step % 3 == 0:
@@ -1145,17 +1239,11 @@ class MetadynamicsVisualization(Scene):
             run_time=0.5
         )
 
-        # Temperature ramp parameters
-        T_initial = 300.0
-        T_target = 2000.0
-        ramp_steps = 500
-        equilibration_steps = 1000
-
         # Ramp up temperature
-        for i in range(ramp_steps):
+        for i in range(self.temp_ramp_steps):
             # Linear temperature increase
-            alpha = i / ramp_steps
-            self.temperature = T_initial + alpha * (T_target - T_initial)
+            alpha = i / self.temp_ramp_steps
+            self.temperature = self.temp_initial + alpha * (self.temp_target - self.temp_initial)
 
             # Update temperature display
             new_temp_text = Text(f"{int(self.temperature)} K", color=YELLOW).scale(0.8)
@@ -1170,7 +1258,7 @@ class MetadynamicsVisualization(Scene):
                 self.wait(0.008)
 
         # Equilibration at high temperature
-        for _ in range(equilibration_steps):
+        for _ in range(self.temp_equilibration_steps):
             self.md_step()
 
             if self.step % 3 == 0:
@@ -1179,9 +1267,9 @@ class MetadynamicsVisualization(Scene):
                 self.wait(0.008)
 
         # Ramp down temperature back to normal
-        for i in range(ramp_steps):
-            alpha = i / ramp_steps
-            self.temperature = T_target - alpha * (T_target - T_initial)
+        for i in range(self.temp_ramp_steps):
+            alpha = i / self.temp_ramp_steps
+            self.temperature = self.temp_target - alpha * (self.temp_target - self.temp_initial)
 
             # Update temperature display
             new_temp_text = Text(f"{int(self.temperature)} K", color=YELLOW).scale(0.8)
@@ -1222,8 +1310,8 @@ class MetadynamicsVisualization(Scene):
         # Activate metadynamics
         self.metadynamics_active = True
 
-        # Run for 6000 steps (3x longer for full metadynamics exploration)
-        for i in range(6000):
+        # Run for configured number of steps for full metadynamics exploration
+        for i in range(self.phase4_steps):
             # Add Gaussian periodically
             if i % self.gaussian_frequency == 0:
                 self.add_gaussian()
