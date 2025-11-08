@@ -194,7 +194,72 @@ def get_string(key):
 class ParticleInteractionsCombinatorics(Scene):
     """Main scene combining all scenarios"""
 
+    PARAMETERS = {
+        # Visual parameters for particles
+        "particle_radius": {
+            "value": 0.2,
+            "type": float,
+            "unit": "-",
+            "description": "Base radius for particle circles",
+            "min": 0.1,
+            "max": 0.5
+        },
+        "label_scale": {
+            "value": 0.4,
+            "type": float,
+            "unit": "-",
+            "description": "Scale factor for particle labels",
+            "min": 0.2,
+            "max": 0.8
+        },
+        # Scenario 3: Water molecule parameters
+        "n_electrons": {
+            "value": 10,
+            "type": int,
+            "unit": "-",
+            "description": "Number of electrons in H₂O (10 for full shell)",
+            "min": 1,
+            "max": 20
+        },
+        "electron_shell_radius": {
+            "value": 2.2,
+            "type": float,
+            "unit": "-",
+            "description": "Radius of electron shell around nuclei",
+            "min": 1.0,
+            "max": 4.0
+        },
+        # Scenario 5: Optimization parameters
+        "n_particles_optimization": {
+            "value": 12,
+            "type": int,
+            "unit": "-",
+            "description": "Number of particles for optimization demo",
+            "min": 5,
+            "max": 20
+        },
+        "cutoff_radius": {
+            "value": 1.2,
+            "type": float,
+            "unit": "-",
+            "description": "Cut-off radius for interaction optimization",
+            "min": 0.5,
+            "max": 3.0
+        },
+        "random_seed": {
+            "value": 42,
+            "type": int,
+            "unit": "-",
+            "description": "Random seed for particle positions in optimization demo",
+            "min": 0,
+            "max": 100
+        }
+    }
+
     def construct(self):
+        # Extract parameters (minimal setup since most values are didactic)
+        self.setup_parameters()
+
         # Title
         title = Text(get_string("title"), color=YELLOW).scale(0.8)
         title.to_edge(UP, buff=0.3)
@@ -211,6 +276,16 @@ class ParticleInteractionsCombinatorics(Scene):
         # Fade out title at the end
         self.play(FadeOut(title))
         self.wait(2)
+
+    def setup_parameters(self):
+        """Extract parameters from PARAMETERS dictionary"""
+        self.particle_radius = self.PARAMETERS["particle_radius"]["value"]
+        self.label_scale = self.PARAMETERS["label_scale"]["value"]
+        self.n_electrons = self.PARAMETERS["n_electrons"]["value"]
+        self.electron_shell_radius = self.PARAMETERS["electron_shell_radius"]["value"]
+        self.n_particles_optimization = self.PARAMETERS["n_particles_optimization"]["value"]
+        self.cutoff_radius = self.PARAMETERS["cutoff_radius"]["value"]
+        self.random_seed = self.PARAMETERS["random_seed"]["value"]
 
     def scenario_1_growth(self):
         """Scenario 1: Count from each particle's perspective to show duplication"""
@@ -746,13 +821,12 @@ class ParticleInteractionsCombinatorics(Scene):
         self.play(Write(phase2_label))
         self.wait(1.5)
 
-        # Create 10 electrons in shell around molecule
+        # Create electrons in shell around molecule
         electrons = VGroup()
-        n_electrons = 10
-        radius = 2.2
+        radius = self.electron_shell_radius
 
-        for i in range(n_electrons):
-            angle = i * TAU / n_electrons + PI/2
+        for i in range(self.n_electrons):
+            angle = i * TAU / self.n_electrons + PI/2
             pos = center + np.array([
                 radius * np.cos(angle),
                 radius * np.sin(angle) * 0.6,  # Flatten vertically
@@ -773,15 +847,15 @@ class ParticleInteractionsCombinatorics(Scene):
 
         # Calculate interactions
         n_nuclei = 3
-        n_electrons = 10
 
         # Show Electron-Electron calculation
         ee_calc_text = Text(get_string("electron_calc_label"), color=BLUE_C).scale(0.45)
         ee_calc_text.move_to(RIGHT * 3 + UP * 2.2)
         self.play(Write(ee_calc_text))
 
+        ee_value = self.n_electrons * (self.n_electrons - 1) // 2
         ee_formula = Tex(
-            r"\frac{10 \times 9}{2} = 45~\text{WW}",
+            rf"\frac{{{self.n_electrons} \times {self.n_electrons - 1}}}{{2}} = {ee_value}~\text{{WW}}",
             color=BLUE_C
         ).scale(0.5)
         ee_formula.move_to(RIGHT * 3 + UP * 1.6)
@@ -809,8 +883,9 @@ class ParticleInteractionsCombinatorics(Scene):
         self.play(Write(ne_calc_text))
 
         # IMPORTANT: No division by 2 for nucleus-electron!
+        ne_value = n_nuclei * self.n_electrons
         ne_formula = Tex(
-            r"3 \times 10 = 30~\text{WW}",
+            rf"3 \times {self.n_electrons} = {ne_value}~\text{{WW}}",
             color=PURPLE
         ).scale(0.5)
         ne_formula.move_to(RIGHT * 3 + UP * 1.6)
@@ -847,10 +922,14 @@ class ParticleInteractionsCombinatorics(Scene):
         summary_title.move_to(RIGHT * 3 + UP * 2.0)
         self.play(Write(summary_title))
 
+        nn_int = n_nuclei * (n_nuclei - 1) // 2
+        ee_int = self.n_electrons * (self.n_electrons - 1) // 2
+        ne_int = n_nuclei * self.n_electrons
+
         summary_lines = VGroup(
-            Text(get_string("summary_nucleus_nucleus"), color=YELLOW).scale(0.4),
-            Text(get_string("summary_electron_electron"), color=BLUE_C).scale(0.4),
-            Text(get_string("summary_nucleus_electron"), color=PURPLE).scale(0.4),
+            Text(f"{get_string('nuclei')}-{get_string('nuclei')}: {nn_int} Int.", color=YELLOW).scale(0.4),
+            Text(f"{get_string('electrons')}-{get_string('electrons')}: {ee_int} Int.", color=BLUE_C).scale(0.4),
+            Text(f"{get_string('nuclei')}-{get_string('electrons')}: {ne_int} Int.", color=PURPLE).scale(0.4),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
         summary_lines.move_to(RIGHT * 3 + UP * 0.8)
 
@@ -866,8 +945,9 @@ class ParticleInteractionsCombinatorics(Scene):
         )
         self.play(ShowCreation(total_line))
 
+        total_int = nn_int + ee_int + ne_int
         total_sum = Tex(
-            r"3 + 45 + 30 = 78~\text{WW}",
+            rf"{nn_int} + {ee_int} + {ne_int} = {total_int}~\text{{WW}}",
             color=GREEN
         ).scale(0.55)
         total_sum.move_to(RIGHT * 3 + DOWN * 0.4)
@@ -884,8 +964,9 @@ class ParticleInteractionsCombinatorics(Scene):
         self.wait(1)
 
         # Show total particle count
+        total_particles = n_nuclei + self.n_electrons
         total_particles_text = Text(
-            get_string("total_particles_count"),
+            f"{total_particles} {get_string('particles')} {get_string('total_interactions').lower()}",
             color=YELLOW
         ).scale(0.45)
         total_particles_text.move_to(RIGHT * 3 + DOWN * 2.0)
@@ -893,18 +974,20 @@ class ParticleInteractionsCombinatorics(Scene):
         self.wait(0.5)
 
         # Show calculation steps
-        # Step 1: 13 × 12
+        # Step 1: n × (n-1)
+        prod_value = total_particles * (total_particles - 1)
         step1 = Tex(
-            r"13 \times 12 = 156",
+            rf"{total_particles} \times {total_particles - 1} = {prod_value}",
             color=YELLOW
         ).scale(0.5)
         step1.move_to(RIGHT * 3 + DOWN * 2.7)
         self.play(Write(step1))
         self.wait(1)
 
-        # Step 2: 156 / 2
+        # Step 2: divide by 2
+        final_value = prod_value // 2
         step2 = Tex(
-            r"\frac{156}{2} = 78~\text{WW}",
+            rf"\frac{{{prod_value}}}{{2}} = {final_value}~\text{{WW}}",
             color=YELLOW
         ).scale(0.5)
         step2.move_to(RIGHT * 3 + DOWN * 3.4)
@@ -1054,13 +1137,12 @@ class ParticleInteractionsCombinatorics(Scene):
         cutoff_demo_center = RIGHT * 2.5
 
         # Create particles
-        n_particles = 12
         particles = VGroup()
         positions = []
 
-        np.random.seed(42)
-        for i in range(n_particles):
-            angle = i * TAU / n_particles
+        np.random.seed(self.random_seed)
+        for i in range(self.n_particles_optimization):
+            angle = i * TAU / self.n_particles_optimization
             r = 1.5 + 0.5 * np.random.random()
             pos = cutoff_demo_center + np.array([r * np.cos(angle), r * np.sin(angle), 0])
             positions.append(pos)
@@ -1074,8 +1156,8 @@ class ParticleInteractionsCombinatorics(Scene):
 
         # Show all interactions first
         all_lines = VGroup()
-        for i in range(n_particles):
-            for j in range(i + 1, n_particles):
+        for i in range(self.n_particles_optimization):
+            for j in range(i + 1, self.n_particles_optimization):
                 line = Line(positions[i], positions[j], stroke_width=1, color=GREY, stroke_opacity=0.3)
                 all_lines.add(line)
 
@@ -1086,9 +1168,8 @@ class ParticleInteractionsCombinatorics(Scene):
         self.wait(2)
 
         # Now show cutoff radius
-        cutoff_radius = 1.2
         cutoff_circle = Circle(
-            radius=cutoff_radius,
+            radius=self.cutoff_radius,
             stroke_color=RED,
             stroke_width=3,
             fill_opacity=0
@@ -1105,10 +1186,10 @@ class ParticleInteractionsCombinatorics(Scene):
         cutoff_lines = VGroup()
         center = cutoff_demo_center
 
-        for i in range(n_particles):
-            for j in range(i + 1, n_particles):
+        for i in range(self.n_particles_optimization):
+            for j in range(i + 1, self.n_particles_optimization):
                 dist = np.linalg.norm(positions[i] - positions[j])
-                if dist < 2 * cutoff_radius:  # Both within cutoff region
+                if dist < 2 * self.cutoff_radius:  # Both within cutoff region
                     line = Line(positions[i], positions[j], stroke_width=2, color=GREEN)
                     cutoff_lines.add(line)
 
@@ -1124,7 +1205,7 @@ class ParticleInteractionsCombinatorics(Scene):
         self.wait(2)
 
         # Show speedup
-        total_interactions = n_particles * (n_particles - 1) // 2
+        total_interactions = self.n_particles_optimization * (self.n_particles_optimization - 1) // 2
         cutoff_interactions = len(cutoff_lines)
         speedup = total_interactions / max(cutoff_interactions, 1)
 
@@ -1198,8 +1279,12 @@ class ParticleInteractionsCombinatorics(Scene):
 
         return lines
 
-    def create_atom(self, label_text, color, radius=0.3, label_scale=0.35):
+    def create_atom(self, label_text, color, radius=None, label_scale=None):
         """Create an atom with label"""
+        if radius is None:
+            radius = self.particle_radius
+        if label_scale is None:
+            label_scale = self.label_scale
         circle = Circle(
             radius=radius,
             fill_color=color,

@@ -55,16 +55,78 @@ def get_string(key):
 
 
 class AngleBending(Scene):
-    def construct(self):
-        # Angle parameters (typical C-C-C angle)
-        self.k_angle = 58.0  # kcal/(mol·rad²) - force constant
-        self.theta0_deg = 109.5  # degrees - tetrahedral angle
-        self.theta0_rad = np.radians(self.theta0_deg)
+    """Angle bending animation with harmonic angular potential V = 1/2 k(θ-θ₀)²."""
 
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Physical parameters
+        "k_angle": {
+            "value": 58.0,
+            "type": float,
+            "unit": "kcal/(mol·rad²)",
+            "description": "Force constant for angular harmonic potential (typical C-C-C)",
+            "min": 0.0,
+            "max": 200.0
+        },
+        "theta0_deg": {
+            "value": 109.5,
+            "type": float,
+            "unit": "°",
+            "description": "Equilibrium bond angle (tetrahedral angle)",
+            "min": 60.0,
+            "max": 180.0
+        },
         # Animation parameters
-        self.amplitude_deg = 25.0  # degrees - oscillation amplitude
-        self.frequency = 0.5  # Hz
-        self.bond_length = 1.5  # Å - for visualization
+        "amplitude_deg": {
+            "value": 25.0,
+            "type": float,
+            "unit": "°",
+            "description": "Oscillation amplitude for angle bending",
+            "min": 5.0,
+            "max": 50.0
+        },
+        "frequency": {
+            "value": 0.5,
+            "type": float,
+            "unit": "Hz",
+            "description": "Oscillation frequency",
+            "min": 0.1,
+            "max": 5.0
+        },
+        "bond_length": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "Bond length for visualization",
+            "min": 0.5,
+            "max": 3.0
+        },
+        "duration": {
+            "value": 8.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 60.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
+        }
+    }
+
+    def construct(self):
+        # Extract parameters from central dictionary
+        self.k_angle = self.PARAMETERS["k_angle"]["value"]
+        self.theta0_deg = self.PARAMETERS["theta0_deg"]["value"]
+        self.theta0_rad = np.radians(self.theta0_deg)
+        self.amplitude_deg = self.PARAMETERS["amplitude_deg"]["value"]
+        self.frequency = self.PARAMETERS["frequency"]["value"]
+        self.bond_length = self.PARAMETERS["bond_length"]["value"]
 
         # Setup layout
         self.setup_layout()
@@ -277,8 +339,9 @@ class AngleBending(Scene):
 
     def animate_bending(self):
         """Animate angle bending with sinusoidal motion"""
-        duration = 8.0  # seconds
-        fps = 30
+        # Get animation parameters from central dictionary
+        duration = self.PARAMETERS["duration"]["value"]
+        fps = self.PARAMETERS["fps"]["value"]
         frames = int(duration * fps)
 
         for frame in range(frames):

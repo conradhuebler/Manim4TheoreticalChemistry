@@ -71,9 +71,31 @@ def get_string(key):
 class MetropolisBasic(Scene):
     """Szene 1: Metropolis-Algorithmus Grundprinzip bei T=298K"""
 
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Physical parameters
+        "T": {
+            "value": 298,
+            "type": int,
+            "unit": "K",
+            "description": "Temperature for Metropolis acceptance probability",
+            "min": 100,
+            "max": 500
+        },
+        "R": {
+            "value": 8.314,
+            "type": float,
+            "unit": "J/(mol·K)",
+            "description": "Gas constant",
+            "min": 8.0,
+            "max": 9.0
+        }
+    }
+
     def construct(self):
-        # Parameter
-        self.T = 298
+        # Extract parameters from central dictionary
+        self.T = self.PARAMETERS["T"]["value"]
+        self.R = self.PARAMETERS["R"]["value"]
         self.ax = None
         self.curve = None
 
@@ -123,7 +145,7 @@ class MetropolisBasic(Scene):
         # Kurve der Akzeptanzwahrscheinlichkeit für ΔE > 0
         def acceptance_prob_positive(x):
             """P(akzeptiert) = exp(-ΔE/RT) für ΔE > 0"""
-            return np.exp(-x * 1000 / (R * self.T))
+            return np.exp(-x * 1000 / (self.R * self.T))
 
         self.curve = self.ax.get_graph(
             acceptance_prob_positive,
@@ -187,7 +209,7 @@ class MetropolisBasic(Scene):
 
         # Akzeptanzwahrscheinlichkeit als Funktion
         def get_acceptance_prob(delta_e):
-            return np.exp(-delta_e * 1000 / (R * self.T))
+            return np.exp(-delta_e * 1000 / (self.R * self.T))
 
         # Dynamische Akzeptanzzone (grün)
         acceptance_zone = always_redraw(lambda: self._create_acceptance_zone(
@@ -300,7 +322,7 @@ class MetropolisBasic(Scene):
         if delta_E <= 0:
             p_accept = 1.0
         else:
-            p_accept = np.exp(-delta_E * 1000 / (R * self.T))
+            p_accept = np.exp(-delta_E * 1000 / (self.R * self.T))
 
         # Zufallszahl generieren
         r = random.random()
@@ -470,8 +492,27 @@ class MetropolisBasic(Scene):
 class MetropolisTemperatures(Scene):
     """Szene 2: Temperatureffekte zeigen"""
 
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # Physical parameters
+        "R": {
+            "value": 8.314,
+            "type": float,
+            "unit": "J/(mol·K)",
+            "description": "Gas constant",
+            "min": 8.0,
+            "max": 9.0
+        }
+        # Note: T_values and colors_temp are lists, handled separately below
+    }
+
     def construct(self):
-        # Parameter
+        # Extract parameters from central dictionary
+        self.R = self.PARAMETERS["R"]["value"]
+        # Use module-level T_values and colors_temp (could be made configurable)
+        self.T_values = T_values
+        self.colors_temp = colors_temp
+
         self.ax = None
         self.curves = []
 
@@ -514,9 +555,9 @@ class MetropolisTemperatures(Scene):
         # Kurven für verschiedene Temperaturen
         legend_entries = []
 
-        for T, color in zip(T_values, colors_temp):
+        for T, color in zip(self.T_values, self.colors_temp):
             # Positive Seite
-            def acceptance_prob(x, T=T):
+            def acceptance_prob(x, T=T, R=self.R):
                 """P(akzeptiert) = exp(-ΔE/RT) für ΔE > 0"""
                 return np.exp(-x * 1000 / (R * T))
 

@@ -73,40 +73,195 @@ def get_string(key):
     return strings[LANGUAGE].get(key, key)
 
 class H3ReactionPathway(Scene):
+    """H₃ reaction pathway: H + H₂ → [H₃]‡ → H₂ + H
+
+    GUI-compatible PARAMETERS structure for H₃ reaction pathway animation.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # MORSE POTENTIAL PARAMETERS
+        # ========================================================================
+        "D_e": {
+            "value": 4.478,
+            "type": float,
+            "unit": "eV",
+            "description": "Morse potential well depth (H-H dissociation energy)",
+            "min": 1.0,
+            "max": 10.0
+        },
+        "r_e": {
+            "value": 0.741,
+            "type": float,
+            "unit": "Å",
+            "description": "H-H equilibrium bond distance",
+            "min": 0.5,
+            "max": 1.5
+        },
+        "alpha": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å⁻¹",
+            "description": "Morse potential width parameter",
+            "min": 0.5,
+            "max": 5.0
+        },
+
+        # ========================================================================
+        # ATOM PARAMETERS
+        # ========================================================================
+        "mass": {
+            "value": 1.008,
+            "type": float,
+            "unit": "amu",
+            "description": "Hydrogen atom mass",
+            "min": 0.5,
+            "max": 2.0
+        },
+        "temperature": {
+            "value": 300,
+            "type": int,
+            "unit": "K",
+            "description": "System temperature",
+            "min": 100,
+            "max": 1000
+        },
+
+        # ========================================================================
+        # SIMULATION PARAMETERS
+        # ========================================================================
+        "dt": {
+            "value": 0.05,
+            "type": float,
+            "unit": "fs",
+            "description": "Time step for simulation",
+            "min": 0.01,
+            "max": 1.0
+        },
+
+        # ========================================================================
+        # PHASE DURATION PARAMETERS
+        # ========================================================================
+        "phase2_steps": {
+            "value": 60,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: H₂ approaching center",
+            "min": 20,
+            "max": 200
+        },
+        "phase2_wait": {
+            "value": 0.08,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 2 animation frame wait time",
+            "min": 0.01,
+            "max": 0.5
+        },
+        "phase3_steps": {
+            "value": 40,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 3 duration: Transition state [H₃]‡",
+            "min": 10,
+            "max": 100
+        },
+        "phase3_wait": {
+            "value": 0.1,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 3 animation frame wait time",
+            "min": 0.01,
+            "max": 0.5
+        },
+        "phase4_steps": {
+            "value": 60,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 4 duration: Bond breaking/forming",
+            "min": 20,
+            "max": 200
+        },
+        "phase4_wait": {
+            "value": 0.08,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 4 animation frame wait time",
+            "min": 0.01,
+            "max": 0.5
+        },
+
+        # ========================================================================
+        # ATOM POSITIONS (fixed positions for visualization)
+        # ========================================================================
+        "x_h1": {
+            "value": -1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "H¹ fixed position (left)",
+            "min": -3.0,
+            "max": -0.5
+        },
+        "x_h3": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "H³ fixed position (right)",
+            "min": 0.5,
+            "max": 3.0
+        },
+        "x_h2_initial": {
+            "value": -0.7,
+            "type": float,
+            "unit": "Å",
+            "description": "H² initial position (starts near H¹)",
+            "min": -1.5,
+            "max": 0.0
+        }
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         # Physical parameters
         self.setup_parameters()
 
-        # Data arrays
+        # Data arrays (internal state, not parameters)
         self.reaction_coord_data = []
         self.energy_data = []
         self.r12_data = []  # H1-H2 distance
         self.r23_data = []  # H2-H3 distance
 
-        # Time tracking
+        # Time tracking (internal state)
         self.current_time = 0.0
-        self.dt = 0.05  # fs
-
-        # Fixed atom positions
-        self.x_h1 = -1.5  # H1 fixed at left
-        self.x_h3 = +1.5  # H3 fixed at right
-        self.x_h2 = -0.7  # H2 starts near H1, moves to +0.7
 
     def setup_parameters(self):
-        """Setup physical and simulation parameters"""
-        # Morse potential parameters for H-H
-        self.D_e = 4.478  # eV, dissociation energy
-        self.r_e = 0.741  # Å, equilibrium distance
-        self.alpha = 1.5  # Å⁻¹, potential width
+        """Extract parameters from central PARAMETERS dictionary"""
+        # Morse potential parameters
+        self.D_e = self.PARAMETERS["D_e"]["value"]
+        self.r_e = self.PARAMETERS["r_e"]["value"]
+        self.alpha = self.PARAMETERS["alpha"]["value"]
 
-        # Mass and dynamics
-        self.mass = 1.008  # amu, hydrogen mass
-        self.temperature = 300  # K
+        # Atom parameters
+        self.mass = self.PARAMETERS["mass"]["value"]
+        self.temperature = self.PARAMETERS["temperature"]["value"]
 
-        # Simple additive model (no LEP complexity needed)
-        # Total energy = sum of three Morse potentials
+        # Simulation parameters
+        self.dt = self.PARAMETERS["dt"]["value"]
+
+        # Phase duration parameters
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.phase2_wait = self.PARAMETERS["phase2_wait"]["value"]
+        self.phase3_steps = self.PARAMETERS["phase3_steps"]["value"]
+        self.phase3_wait = self.PARAMETERS["phase3_wait"]["value"]
+        self.phase4_steps = self.PARAMETERS["phase4_steps"]["value"]
+        self.phase4_wait = self.PARAMETERS["phase4_wait"]["value"]
+
+        # Atom positions
+        self.x_h1 = self.PARAMETERS["x_h1"]["value"]
+        self.x_h3 = self.PARAMETERS["x_h3"]["value"]
+        self.x_h2 = self.PARAMETERS["x_h2_initial"]["value"]
 
     def construct(self):
         """Main animation sequence"""
@@ -522,7 +677,7 @@ class H3ReactionPathway(Scene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move H2 from -0.7 to -0.1 (approaching center)
-        for step in range(60):
+        for step in range(self.phase2_steps):
             progress = step / 60
             self.x_h2 = -0.7 + 0.6 * progress
 
@@ -546,7 +701,7 @@ class H3ReactionPathway(Scene):
             self.energy_data.append(self.get_current_energy())
 
             if step % 5 == 0:
-                self.wait(0.08)
+                self.wait(self.phase2_wait)
 
     def phase_3_transition_state(self):
         """Phase 3: Transition state [H3]‡"""
@@ -555,7 +710,7 @@ class H3ReactionPathway(Scene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move H2 from -0.1 to +0.1 (through transition state)
-        for step in range(40):
+        for step in range(self.phase3_steps):
             progress = step / 40
             self.x_h2 = -0.1 + 0.1 * progress
 
@@ -574,7 +729,7 @@ class H3ReactionPathway(Scene):
             self.energy_data.append(self.get_current_energy())
 
             if step % 3 == 0:
-                self.wait(0.1)
+                self.wait(self.phase3_wait)
 
         # Pause at transition state
         self.wait(1)
@@ -586,7 +741,7 @@ class H3ReactionPathway(Scene):
         self.play(Transform(self.current_phase_label, phase_label))
 
         # Move H2 from +0.1 to +0.7 (toward H3)
-        for step in range(60):
+        for step in range(self.phase4_steps):
             progress = step / 60
             self.x_h2 = 0.1 + 0.6 * progress
 
@@ -606,7 +761,7 @@ class H3ReactionPathway(Scene):
             self.energy_data.append(self.get_current_energy())
 
             if step % 5 == 0:
-                self.wait(0.08)
+                self.wait(self.phase4_wait)
 
     def phase_5_products(self):
         """Phase 5: Final products H1 + H2-H3"""

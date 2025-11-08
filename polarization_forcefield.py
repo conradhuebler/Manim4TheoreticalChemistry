@@ -275,25 +275,138 @@ class MDSimulator:
 
 
 class PolarizationForceField(Scene):
-    def construct(self):
-        # MD Parameters
-        self.n_environment_atoms = 6
-        self.box_size = 2.5
-        self.epsilon = 0.1  # LJ well depth (reduced for softer interactions)
-        self.sigma = 0.03  # LJ collision radius (smaller particles)
-        self.dt_md = 0.003  # MD timestep (smaller for stability)
-        self.steps_per_frame = 3  # MD steps per animation frame (fewer for slower motion)
+    """Polarization force field comparison with MD simulation."""
 
-        # Visual parameters (larger than collision radii)
-        self.visual_radius_central = 0.15  # Visual radius for atom of interest
-        self.visual_radius_env = 0.1  # Visual radius for environment atoms
-
+    PARAMETERS = {
+        # MD simulation parameters
+        "n_environment_atoms": {
+            "value": 6,
+            "type": int,
+            "unit": "-",
+            "description": "Number of environment atoms around central atom",
+            "min": 3,
+            "max": 12
+        },
+        "box_size": {
+            "value": 2.5,
+            "type": float,
+            "unit": "-",
+            "description": "Size of simulation box",
+            "min": 1.0,
+            "max": 5.0
+        },
+        "epsilon": {
+            "value": 0.1,
+            "type": float,
+            "unit": "kcal/mol",
+            "description": "LJ well depth (reduced for softer interactions)",
+            "min": 0.01,
+            "max": 1.0
+        },
+        "sigma": {
+            "value": 0.03,
+            "type": float,
+            "unit": "Å",
+            "description": "LJ collision radius (smaller particles)",
+            "min": 0.01,
+            "max": 0.1
+        },
+        "dt_md": {
+            "value": 0.003,
+            "type": float,
+            "unit": "fs",
+            "description": "MD timestep (smaller for stability)",
+            "min": 0.001,
+            "max": 0.01
+        },
+        "steps_per_frame": {
+            "value": 3,
+            "type": int,
+            "unit": "-",
+            "description": "MD steps per animation frame (fewer for slower motion)",
+            "min": 1,
+            "max": 10
+        },
+        # Visual parameters
+        "visual_radius_central": {
+            "value": 0.15,
+            "type": float,
+            "unit": "-",
+            "description": "Visual radius for central atom of interest",
+            "min": 0.05,
+            "max": 0.5
+        },
+        "visual_radius_env": {
+            "value": 0.1,
+            "type": float,
+            "unit": "-",
+            "description": "Visual radius for environment atoms",
+            "min": 0.05,
+            "max": 0.3
+        },
         # Polarization parameters
-        self.base_charge = 0.2
-        self.polarization_strength = 0.65  # Increased sensitivity
-        self.distance_decay = 0.6  # Exponential decay parameter (more sensitive)
-        self.max_charge = 1.5  # Extended range
-        self.min_charge = 0.0
+        "base_charge": {
+            "value": 0.2,
+            "type": float,
+            "unit": "e",
+            "description": "Base partial charge for non-polarizable model",
+            "min": 0.0,
+            "max": 1.0
+        },
+        "polarization_strength": {
+            "value": 0.65,
+            "type": float,
+            "unit": "-",
+            "description": "Polarization sensitivity (higher = more sensitive)",
+            "min": 0.1,
+            "max": 2.0
+        },
+        "distance_decay": {
+            "value": 0.6,
+            "type": float,
+            "unit": "1/Å",
+            "description": "Exponential decay parameter for polarization",
+            "min": 0.1,
+            "max": 2.0
+        },
+        "max_charge": {
+            "value": 1.5,
+            "type": float,
+            "unit": "e",
+            "description": "Maximum partial charge in polarizable model",
+            "min": 0.5,
+            "max": 3.0
+        },
+        "min_charge": {
+            "value": 0.0,
+            "type": float,
+            "unit": "e",
+            "description": "Minimum partial charge in polarizable model",
+            "min": 0.0,
+            "max": 1.0
+        },
+        # Animation parameters
+        "total_time": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 60.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
+        }
+    }
+
+    def construct(self):
+        # Extract parameters from central dictionary
+        self.setup_parameters()
 
         # Create title
         title = Text(get_string("title"), color=YELLOW).scale(0.7)
@@ -319,6 +432,31 @@ class PolarizationForceField(Scene):
         self.run_simulation()
 
         self.wait(2)
+
+    def setup_parameters(self):
+        """Extract all parameters from PARAMETERS dictionary"""
+        # MD parameters
+        self.n_environment_atoms = self.PARAMETERS["n_environment_atoms"]["value"]
+        self.box_size = self.PARAMETERS["box_size"]["value"]
+        self.epsilon = self.PARAMETERS["epsilon"]["value"]
+        self.sigma = self.PARAMETERS["sigma"]["value"]
+        self.dt_md = self.PARAMETERS["dt_md"]["value"]
+        self.steps_per_frame = self.PARAMETERS["steps_per_frame"]["value"]
+
+        # Visual parameters
+        self.visual_radius_central = self.PARAMETERS["visual_radius_central"]["value"]
+        self.visual_radius_env = self.PARAMETERS["visual_radius_env"]["value"]
+
+        # Polarization parameters
+        self.base_charge = self.PARAMETERS["base_charge"]["value"]
+        self.polarization_strength = self.PARAMETERS["polarization_strength"]["value"]
+        self.distance_decay = self.PARAMETERS["distance_decay"]["value"]
+        self.max_charge = self.PARAMETERS["max_charge"]["value"]
+        self.min_charge = self.PARAMETERS["min_charge"]["value"]
+
+        # Animation parameters
+        self.total_time = self.PARAMETERS["total_time"]["value"]
+        self.fps = self.PARAMETERS["fps"]["value"]
 
     def create_scenario_labels(self):
         """Create labels for both scenarios"""
@@ -719,9 +857,8 @@ class PolarizationForceField(Scene):
 
     def run_simulation(self):
         """Run the molecular dynamics simulation"""
-        frame_dt = 1/30  # Animation frame rate
-        total_time = 10.0  # seconds
-        frames = int(total_time / frame_dt)
+        frame_dt = 1/self.fps  # Animation frame rate
+        frames = int(self.total_time / frame_dt)
 
         for frame in range(frames):
             # Run multiple MD steps per frame (all atoms can move now)

@@ -105,6 +105,114 @@ SCENARIO = "TUNNELING"  # Change to: CLASSICAL_TRAPPED, HIGH_ENERGY, DISPERSION,
 
 
 class QuantumDynamics(Scene):
+    """Quantum wavepacket dynamics in double-well potential.
+
+    GUI-compatible PARAMETERS structure for quantum dynamics simulation.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # SCENARIO SELECTION
+        # ========================================================================
+        "active_scenario": {
+            "value": SCENARIO,
+            "type": str,
+            "unit": "-",
+            "description": "Active scenario preset: TUNNELING, CLASSICAL_TRAPPED, HIGH_ENERGY, DISPERSION, COHERENT",
+            "min": "",
+            "max": ""
+        },
+
+        # ========================================================================
+        # PHYSICAL CONSTANTS (atomic units)
+        # ========================================================================
+        "length": {
+            "value": 5.12,
+            "type": float,
+            "unit": "Bohr",
+            "description": "Simulation box length",
+            "min": 1.0,
+            "max": 20.0
+        },
+        "mass": {
+            "value": 50,
+            "type": int,
+            "unit": "a.u.",
+            "description": "Particle mass (proton ≈ 1836 a.u.)",
+            "min": 1,
+            "max": 10000
+        },
+        "width": {
+            "value": 3.0,
+            "type": float,
+            "unit": "Bohr",
+            "description": "Double-well width parameter",
+            "min": 0.5,
+            "max": 10.0
+        },
+
+        # ========================================================================
+        # SIMULATION PARAMETERS
+        # ========================================================================
+        "npoints": {
+            "value": 8192,
+            "type": int,
+            "unit": "points",
+            "description": "Number of grid points (power of 2 for FFT)",
+            "min": 512,
+            "max": 32768
+        },
+        "dt": {
+            "value": 0.01 * 41.341,
+            "type": float,
+            "unit": "a.u.",
+            "description": "Time step for split-step propagation",
+            "min": 0.01,
+            "max": 10.0
+        },
+        "snapshot_freq": {
+            "value": 10,
+            "type": int,
+            "unit": "steps",
+            "description": "Propagation steps between visual updates",
+            "min": 1,
+            "max": 100
+        },
+
+        # ========================================================================
+        # ANIMATION PARAMETERS
+        # ========================================================================
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Animation frames per second",
+            "min": 10,
+            "max": 60
+        },
+
+        # ========================================================================
+        # VISUALIZATION PARAMETERS
+        # ========================================================================
+        "x_plot_range": {
+            "value": 4.0,
+            "type": float,
+            "unit": "Bohr",
+            "description": "Plot range: only show |x| <= this value",
+            "min": 1.0,
+            "max": 10.0
+        },
+        "vis_downsample": {
+            "value": 8,
+            "type": int,
+            "unit": "-",
+            "description": "Show every Nth point for smooth visualization",
+            "min": 1,
+            "max": 32
+        }
+    }
+
     def construct(self):
         # Setup and animation
         self.setup_parameters()
@@ -116,43 +224,49 @@ class QuantumDynamics(Scene):
         self.wait(2)
 
     def setup_parameters(self):
-        """Define physical constants and simulation parameters"""
-        # Load selected scenario
-        if SCENARIO not in SCENARIOS:
-            raise ValueError(f"Unknown scenario: {SCENARIO}. Available: {list(SCENARIOS.keys())}")
+        """Extract parameters from central PARAMETERS dictionary"""
+        # Scenario selection
+        active_scenario_name = self.PARAMETERS["active_scenario"]["value"]
 
-        scenario = SCENARIOS[SCENARIO]
-        print(f"🎬 Loading scenario: {SCENARIO}")
+        # Validate scenario
+        if active_scenario_name not in SCENARIOS:
+            raise ValueError(f"Unknown scenario: {active_scenario_name}. Available: {list(SCENARIOS.keys())}")
+
+        scenario = SCENARIOS[active_scenario_name]
+        print(f"🎬 Loading scenario: {active_scenario_name}")
         print(f"   Description: {scenario['description']}")
 
-        # Physical constants (atomic units)
-        self.LENGTH = 5.12              # Box length (Bohr)
-        self.MASS = 50         # Proton mass (a.u.)
+        # Physical constants (from PARAMETERS)
+        self.LENGTH = self.PARAMETERS["length"]["value"]
+        self.MASS = self.PARAMETERS["mass"]["value"]
+        self.WIDTH = self.PARAMETERS["width"]["value"]
         self.PI = np.pi
 
-        # Potential parameters (from scenario)
+        # Scenario-specific potential parameters
         self.BARRIER = scenario["barrier"] / 627.509    # Convert kcal/mol → a.u.
-        self.WIDTH = 3.0                                # Double-well width (Bohr)
 
-        # Wavepacket parameters (from scenario)
+        # Scenario-specific wavepacket parameters
         self.X0 = scenario["x0"]        # Initial position (Bohr)
         self.ALPHA = scenario["alpha"]  # Gaussian width parameter
 
-        # Simulation parameters
-        self.NPOINTS = 8192             # Number of grid points (high resolution!)
-        self.DT = 0.01 * 41.341         # Time step (a.u.)
-        self.SNAPSHOT_FREQ = 10         # Frames between updates
+        # Store active scenario name for display
+        self.active_scenario = active_scenario_name
 
-        # Animation parameters (from scenario)
+        # Simulation parameters (from PARAMETERS)
+        self.NPOINTS = self.PARAMETERS["npoints"]["value"]
+        self.DT = self.PARAMETERS["dt"]["value"]
+        self.SNAPSHOT_FREQ = self.PARAMETERS["snapshot_freq"]["value"]
+
+        # Animation parameters (scenario duration + PARAMETERS fps)
         self.duration = scenario["duration"]
-        self.fps = 30
+        self.fps = self.PARAMETERS["fps"]["value"]
 
-        # Visualization parameters (from scenario)
+        # Visualization parameters (scenario pot_scale + PARAMETERS)
         self.POTENTIAL_SCALE = scenario["pot_scale"]
-        self.X_PLOT_RANGE = 4.0         # Only plot |x| <= this value
-        self.VIS_DOWNSAMPLE = 8         # Show every Nth point for visualization
+        self.X_PLOT_RANGE = self.PARAMETERS["x_plot_range"]["value"]
+        self.VIS_DOWNSAMPLE = self.PARAMETERS["vis_downsample"]["value"]
 
-        # Grid setup (CORRECTED to match original!)
+        # Grid setup
         self.dx = self.LENGTH / self.NPOINTS
         self.x = np.linspace(-self.LENGTH/2, self.LENGTH/2, self.NPOINTS)
 
@@ -160,7 +274,7 @@ class QuantumDynamics(Scene):
         """Create single-panel layout with title"""
         # Title with scenario name
         main_title = Text(get_string("title"), color=YELLOW).scale(0.6)
-        scenario_label = Text(f"[{SCENARIO}]", color=GREEN).scale(0.45)
+        scenario_label = Text(f"[{self.active_scenario}]", color=GREEN).scale(0.45)
 
         title_group = VGroup(main_title, scenario_label).arrange(DOWN, buff=0.15)
         title_group.to_edge(UP, buff=0.3)
@@ -283,7 +397,7 @@ class QuantumDynamics(Scene):
 
         # Parameter info
         params = VGroup(
-            Text(f"Scenario: {SCENARIO}", color=GREEN).scale(param_scale),
+            Text(f"Scenario: {self.active_scenario}", color=GREEN).scale(param_scale),
             Text(f"{get_string('barrier')}: {self.BARRIER * 627.509:.1f} kcal/mol",
                  color=WHITE).scale(param_scale),
             Text(f"α: {self.ALPHA:.2f}",

@@ -84,6 +84,218 @@ def get_string(key):
     return STRINGS[LANGUAGE][key]
 
 class H2MDFull(Scene):
+    """H₂ molecule formation: Free atoms → Born-Oppenheimer → Formation → Dissociation.
+
+    GUI-compatible PARAMETERS structure for MD simulation of H₂ molecule.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # PHYSICAL CONSTANTS
+        # ========================================================================
+        "k_B": {
+            "value": 8.617e-5,
+            "type": float,
+            "unit": "eV/K",
+            "description": "Boltzmann constant",
+            "min": 1e-6,
+            "max": 1e-3
+        },
+        "T": {
+            "value": 1500,
+            "type": int,
+            "unit": "K",
+            "description": "Temperature for initial kinetic energy",
+            "min": 100,
+            "max": 5000
+        },
+        "dt": {
+            "value": 0.5,
+            "type": float,
+            "unit": "fs",
+            "description": "MD integration timestep (femtoseconds)",
+            "min": 0.01,
+            "max": 2.0
+        },
+
+        # ========================================================================
+        # BOX PARAMETERS
+        # ========================================================================
+        "box_size": {
+            "value": 4.0,
+            "type": float,
+            "unit": "Å",
+            "description": "Simulation box half-width (harmonic walls)",
+            "min": 2.0,
+            "max": 10.0
+        },
+        "box_k": {
+            "value": 5.0,
+            "type": float,
+            "unit": "eV/Å²",
+            "description": "Harmonic wall force constant",
+            "min": 0.1,
+            "max": 50.0
+        },
+
+        # ========================================================================
+        # ATOM PARAMETERS
+        # ========================================================================
+        "mass": {
+            "value": 1.0,
+            "type": float,
+            "unit": "amu",
+            "description": "H-atom mass (simplified units)",
+            "min": 0.5,
+            "max": 2.0
+        },
+
+        # ========================================================================
+        # LENNARD-JONES PARAMETERS (Phase 2)
+        # ========================================================================
+        "epsilon": {
+            "value": 0.1,
+            "type": float,
+            "unit": "eV",
+            "description": "LJ potential well depth for H-H interaction",
+            "min": 0.01,
+            "max": 1.0
+        },
+        "sigma": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "LJ zero-crossing distance",
+            "min": 0.5,
+            "max": 3.0
+        },
+
+        # ========================================================================
+        # H₂ MORSE POTENTIAL PARAMETERS (Phases 4-5)
+        # ========================================================================
+        "D_e": {
+            "value": 4.478,
+            "type": float,
+            "unit": "eV",
+            "description": "Morse potential well depth (H₂ dissociation energy)",
+            "min": 1.0,
+            "max": 10.0
+        },
+        "r_e": {
+            "value": 0.741,
+            "type": float,
+            "unit": "Å",
+            "description": "H₂ equilibrium bond length",
+            "min": 0.5,
+            "max": 1.5
+        },
+        "alpha": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å⁻¹",
+            "description": "Morse potential width parameter",
+            "min": 0.5,
+            "max": 5.0
+        },
+
+        # ========================================================================
+        # VISUALIZATION PARAMETERS
+        # ========================================================================
+        "plot_time_window": {
+            "value": 500.0,
+            "type": float,
+            "unit": "fs",
+            "description": "Time window displayed in plots (sliding window)",
+            "min": 100.0,
+            "max": 2000.0
+        },
+        "min_points_for_snake": {
+            "value": 10,
+            "type": int,
+            "unit": "points",
+            "description": "Minimum data points before enabling sliding window",
+            "min": 5,
+            "max": 50
+        },
+        "disable_sliding_window": {
+            "value": False,
+            "type": bool,
+            "unit": "-",
+            "description": "Disable sliding window for didactic purposes (show full history)",
+            "min": 0,
+            "max": 1
+        },
+
+        # ========================================================================
+        # PHASE DURATION PARAMETERS
+        # ========================================================================
+        "phase1_steps": {
+            "value": 200,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 1 duration: Free H-atoms in box",
+            "min": 50,
+            "max": 1000
+        },
+        "phase1_wait": {
+            "value": 0.004,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 1 animation frame wait time",
+            "min": 0.001,
+            "max": 0.1
+        },
+        "phase2_steps": {
+            "value": 800,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: Two H-atoms with interaction",
+            "min": 200,
+            "max": 2000
+        },
+        "phase2_wait": {
+            "value": 0.001,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 2 animation frame wait time",
+            "min": 0.0001,
+            "max": 0.01
+        },
+        "phase4_steps": {
+            "value": 200,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 4 duration: H₂ formation (per loop)",
+            "min": 50,
+            "max": 1000
+        },
+        "phase4_wait": {
+            "value": 0.02,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 4 animation frame wait time",
+            "min": 0.001,
+            "max": 0.1
+        },
+        "phase5_steps": {
+            "value": 200,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 5 duration: H₂ dissociation",
+            "min": 50,
+            "max": 1000
+        },
+        "phase5_wait": {
+            "value": 0.005,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 5 animation frame wait time",
+            "min": 0.001,
+            "max": 0.05
+        }
+    }
+
     def construct(self):
         # Initialize parameters
         self.setup_parameters()
@@ -94,7 +306,6 @@ class H2MDFull(Scene):
         # Run animation phases
         self.phase_1_free_atoms()
         self.phase_2_two_atoms()
-        self.dt = 0.1
         self.phase_3_born_oppenheimer()
         self.phase_4_h2_formation()
         self.phase_5_dissociation()
@@ -102,20 +313,44 @@ class H2MDFull(Scene):
         self.wait(3)
 
     def setup_parameters(self):
-        """Setup all MD parameters and constants"""
+        """Extract parameters from central PARAMETERS dictionary"""
         # Physical constants
-        self.k_B = 8.617e-5  # eV/K
-        self.T = 1500  # K
-        self.dt = 0.5  # fs (small timestep)
+        self.k_B = self.PARAMETERS["k_B"]["value"]
+        self.T = self.PARAMETERS["T"]["value"]
+        self.dt = self.PARAMETERS["dt"]["value"]
 
-        # Box parameters (simulation box)
-        self.box_size = 4.0  # Å (box half-width)
-        self.box_k = 5.0  # eV/Å² (harmonic wall strength)
+        # Box parameters
+        self.box_size = self.PARAMETERS["box_size"]["value"]
+        self.box_k = self.PARAMETERS["box_k"]["value"]
 
         # H-atom parameters
-        self.mass = 1.0  # Simplified units
+        self.mass = self.PARAMETERS["mass"]["value"]
 
-        # Initialize single H-atom
+        # Lennard-Jones parameters (for Phase 2)
+        self.epsilon = self.PARAMETERS["epsilon"]["value"]
+        self.sigma = self.PARAMETERS["sigma"]["value"]
+
+        # H2 Morse potential parameters (for later phases)
+        self.D_e = self.PARAMETERS["D_e"]["value"]
+        self.r_e = self.PARAMETERS["r_e"]["value"]
+        self.alpha = self.PARAMETERS["alpha"]["value"]
+
+        # Visualization parameters
+        self.plot_time_window = self.PARAMETERS["plot_time_window"]["value"]
+        self.min_points_for_snake = self.PARAMETERS["min_points_for_snake"]["value"]
+        self.disable_sliding_window = self.PARAMETERS["disable_sliding_window"]["value"]
+
+        # Phase duration parameters
+        self.phase1_steps = self.PARAMETERS["phase1_steps"]["value"]
+        self.phase1_wait = self.PARAMETERS["phase1_wait"]["value"]
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.phase2_wait = self.PARAMETERS["phase2_wait"]["value"]
+        self.phase4_steps = self.PARAMETERS["phase4_steps"]["value"]
+        self.phase4_wait = self.PARAMETERS["phase4_wait"]["value"]
+        self.phase5_steps = self.PARAMETERS["phase5_steps"]["value"]
+        self.phase5_wait = self.PARAMETERS["phase5_wait"]["value"]
+
+        # Initialize single H-atom (initial conditions, not parameters)
         self.h1_pos = np.array([0.0, 0.0])  # x, y position
         self.h1_vel = np.array([0.02, 0.015])  # x, y velocity
         self.h1_electron_phase = 0.0
@@ -125,16 +360,7 @@ class H2MDFull(Scene):
         self.h2_vel = np.array([-0.01, -0.01])
         self.h2_electron_phase = np.pi  # π phase difference
 
-        # Lennard-Jones parameters (for Phase 2)
-        self.epsilon = 0.1  # eV (potential well depth for H-H)
-        self.sigma = 1.5  # Å (zero-crossing distance)
-
-        # H2 interaction parameters (for later phases)
-        self.D_e = 4.478  # eV
-        self.r_e = 0.741  # Å
-        self.alpha = 1.5  # Å^-1
-
-        # Tracking data with adaptive time scaling
+        # Tracking data (internal state, not parameters)
         self.time_data = []
         self.h1_energy_data = []
         self.h2_energy_data = []
@@ -142,12 +368,7 @@ class H2MDFull(Scene):
         self.interaction_energy_data = []
         self.current_time = 0.0
 
-        # Snake-style plotting parameters
-        self.plot_time_window = 500.0  # Show 500 fs in plots (sliding window)
-        self.min_points_for_snake = 10  # Minimum points before starting snake behavior
-        self.disable_sliding_window = False  # Flag to disable sliding window for better didactics
-
-        # Animation phase control
+        # Animation phase control (internal state)
         self.current_phase = 1
         self.phase_timer = 0
 
@@ -589,7 +810,7 @@ class H2MDFull(Scene):
         self.play(Transform(self.current_phase_label, phase_text))
 
         # Run MD for single atom
-        for step in range(200):  # About 20 fs
+        for step in range(self.phase1_steps):
             # Update H1 atom
             def h1_forces(pos):
                 return self.box_force(pos)
@@ -617,7 +838,7 @@ class H2MDFull(Scene):
             if step % 1 == 0:
                 self.update_h_atom_visualization(1)
                 self.update_plots()
-                self.wait(0.004)
+                self.wait(self.phase1_wait)
 
         self.wait(1)
 
@@ -648,7 +869,7 @@ class H2MDFull(Scene):
         self.play(ShowCreation(self.h2_group))
 
         # Run MD for both atoms
-        for step in range(800):  # About 150 fs
+        for step in range(self.phase2_steps):
             # Forces on H1
             def h1_forces(pos):
                 box_f = self.box_force(pos)
@@ -698,7 +919,7 @@ class H2MDFull(Scene):
                 self.update_h_atom_visualization(1)
                 self.update_h_atom_visualization(2)
                 self.update_plots()
-                self.wait(0.001)
+                self.wait(self.phase2_wait)
 
         self.wait(2)
 
@@ -802,7 +1023,7 @@ class H2MDFull(Scene):
         self.v_h2 = 0.05  # Small initial velocity
 
         # Show harmonic approximation after some Morse motion
-        for step in range(200):
+        for step in range(self.phase4_steps):
             # Morse potential dynamics
             F_morse = -2 * self.D_e * self.alpha * (1 - np.exp(-self.alpha * (self.r_h2 - self.r_e))) * np.exp(-self.alpha * (self.r_h2 - self.r_e))
 
@@ -857,8 +1078,8 @@ class H2MDFull(Scene):
             new_value_displays.move_to(self.potential_plot_center + RIGHT * 2.5)
 
             # Update plots - slow down animation for better tracking
-            if step % 1 == 0:  # Update every 4 steps instead of 8
-                self.wait(0.02)  # Slower animation (0.08 instead of 0.03)
+            if step % 1 == 0:
+                self.wait(self.phase4_wait)
 
         # Show harmonic approximation explanation
         harmonic_explanation = VGroup(
@@ -889,7 +1110,7 @@ class H2MDFull(Scene):
         self.play(FadeOut(harmonic_group))
 
         # Continue with motion showing both potentials
-        for step in range(200):
+        for step in range(self.phase4_steps):
             # Morse potential dynamics
             F_morse = -2 * self.D_e * self.alpha * (1 - np.exp(-self.alpha * (self.r_h2 - self.r_e))) * np.exp(-self.alpha * (self.r_h2 - self.r_e))
 
@@ -944,8 +1165,8 @@ class H2MDFull(Scene):
             new_value_displays.move_to(self.potential_plot_center + RIGHT * 2.5)
 
             # Update plots - slow down animation for better tracking
-            if step % 1 == 0:  # Update every 4 steps instead of 8
-                self.wait(0.02)  # Slower animation (0.08 instead of 0.03)
+            if step % 1 == 0:
+                self.wait(self.phase4_wait)
 
         # Add bond line
         self.bond_line = Line(
@@ -968,7 +1189,7 @@ class H2MDFull(Scene):
         self.v_h2 = 2  # Higher velocity to overcome potential barrier
 
         # Dissociation sequence
-        for step in range(200):  # More steps for smooth dissociation
+        for step in range(self.phase5_steps):
             # Morse potential dynamics
             F_morse = -2 * self.D_e * self.alpha * (1 - np.exp(-self.alpha * (self.r_h2 - self.r_e))) * np.exp(-self.alpha * (self.r_h2 - self.r_e))
 
@@ -1027,7 +1248,7 @@ class H2MDFull(Scene):
                 self.play(FadeOut(self.bond_line), run_time=0.5)
             # Update plots with smoother animation
             if step % 1 == 0:
-                self.wait(0.005)  # Smoother animation
+                self.wait(self.phase5_wait)
 
         # After dissociation, show atoms as free
         self.play(

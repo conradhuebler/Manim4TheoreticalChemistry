@@ -126,6 +126,270 @@ def get_string(key):
 
 
 class PolymerSamplingComparison(Scene):
+    """Polymer sampling comparison: 4 methods (MC, NAIVE, MD, OPT) with unified physics.
+
+    GUI-compatible PARAMETERS structure with method-specific parameters.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # GENERAL CONFIGURATION
+        # ========================================================================
+        "sampling_method": {
+            "value": SAMPLING_METHOD,
+            "type": str,
+            "unit": "-",
+            "description": "Sampling method: MC (Monte Carlo), NAIVE (Random+Opt), MD (Molecular Dynamics), OPT (Pure Optimization)",
+            "min": "",
+            "max": ""
+        },
+        "initial_config": {
+            "value": INITIAL_CONFIG,
+            "type": str,
+            "unit": "-",
+            "description": "Initial configuration: LINEAR (chain along diagonal) or RANDOM (uniform in box)",
+            "min": "",
+            "max": ""
+        },
+        "n_steps": {
+            "value": N_STEPS,
+            "type": int,
+            "unit": "steps",
+            "description": "Total number of simulation steps",
+            "min": 100,
+            "max": 100000
+        },
+
+        # ========================================================================
+        # COMMON PHYSICS PARAMETERS (all methods)
+        # ========================================================================
+        "n_beads": {
+            "value": 20,
+            "type": int,
+            "unit": "-",
+            "description": "Number of beads in polymer chain (fixed topology)",
+            "min": 3,
+            "max": 100
+        },
+        "box_size": {
+            "value": 35.0,
+            "type": float,
+            "unit": "Å",
+            "description": "Simulation box size (square)",
+            "min": 10.0,
+            "max": 100.0
+        },
+        "initial_spacing": {
+            "value": 1.7,
+            "type": float,
+            "unit": "Å",
+            "description": "Initial spacing between beads (LINEAR config only)",
+            "min": 0.5,
+            "max": 5.0
+        },
+        "r0_bond": {
+            "value": 1.5,
+            "type": float,
+            "unit": "Å",
+            "description": "Equilibrium bond length",
+            "min": 0.5,
+            "max": 3.0
+        },
+        "k_bond": {
+            "value": 0.0,
+            "type": float,
+            "unit": "kcal/(mol·Å²)",
+            "description": "Harmonic bond force constant (0 = no bonds, 30 = typical)",
+            "min": 0.0,
+            "max": 100.0
+        },
+        "epsilon_lj": {
+            "value": 0.0,
+            "type": float,
+            "unit": "kcal/mol",
+            "description": "Lennard-Jones well depth (0 = no LJ)",
+            "min": 0.0,
+            "max": 10.0
+        },
+        "sigma_lj": {
+            "value": 2.5,
+            "type": float,
+            "unit": "Å",
+            "description": "Lennard-Jones size parameter",
+            "min": 0.5,
+            "max": 5.0
+        },
+        "cutoff_lj": {
+            "value": 100.0,
+            "type": float,
+            "unit": "Å",
+            "description": "Lennard-Jones cutoff distance (100 = no cutoff)",
+            "min": 3.0,
+            "max": 200.0
+        },
+        "mass": {
+            "value": 12.0,
+            "type": float,
+            "unit": "amu",
+            "description": "Bead mass (12 = Carbon)",
+            "min": 1.0,
+            "max": 100.0
+        },
+        "k_B": {
+            "value": 0.001987,
+            "type": float,
+            "unit": "kcal/(mol·K)",
+            "description": "Boltzmann constant (physical constant)",
+            "min": 0.001,
+            "max": 0.01
+        },
+
+        # ========================================================================
+        # MC METHOD PARAMETERS
+        # ========================================================================
+        "mc_temperature": {
+            "value": 300.0,
+            "type": float,
+            "unit": "K",
+            "description": "[MC] Simulation temperature for Metropolis criterion",
+            "min": 1.0,
+            "max": 1000.0
+        },
+        "mc_max_displacement": {
+            "value": 0.2,
+            "type": float,
+            "unit": "Å",
+            "description": "[MC] Maximum random displacement per MC move",
+            "min": 0.01,
+            "max": 5.0
+        },
+        "mc_steps_per_frame": {
+            "value": 1,
+            "type": int,
+            "unit": "steps/frame",
+            "description": "[MC] MC steps per visualization frame",
+            "min": 1,
+            "max": 100
+        },
+
+        # ========================================================================
+        # NAIVE METHOD PARAMETERS
+        # ========================================================================
+        "naive_perturbation_strength": {
+            "value": 0.3,
+            "type": float,
+            "unit": "Å",
+            "description": "[NAIVE] Random perturbation amplitude before optimization",
+            "min": 0.01,
+            "max": 2.0
+        },
+        "naive_opt_max_steps": {
+            "value": 50,
+            "type": int,
+            "unit": "steps",
+            "description": "[NAIVE] Max gradient descent steps per perturbation",
+            "min": 1,
+            "max": 500
+        },
+        "naive_opt_tolerance": {
+            "value": 1e-3,
+            "type": float,
+            "unit": "kcal/(mol·Å)",
+            "description": "[NAIVE] Convergence tolerance (force norm)",
+            "min": 1e-6,
+            "max": 1.0
+        },
+        "naive_steps_per_frame": {
+            "value": 1,
+            "type": int,
+            "unit": "steps/frame",
+            "description": "[NAIVE] Sampling cycles per visualization frame",
+            "min": 1,
+            "max": 100
+        },
+
+        # ========================================================================
+        # MD METHOD PARAMETERS
+        # ========================================================================
+        "md_dt": {
+            "value": 0.0001,
+            "type": float,
+            "unit": "ps",
+            "description": "[MD] Integration timestep for Velocity Verlet",
+            "min": 1e-6,
+            "max": 0.01
+        },
+        "md_temperature": {
+            "value": 300.0,
+            "type": float,
+            "unit": "K",
+            "description": "[MD] Target temperature for Berendsen thermostat",
+            "min": 1.0,
+            "max": 1000.0
+        },
+        "md_berendsen_tau": {
+            "value": 0.1,
+            "type": float,
+            "unit": "ps",
+            "description": "[MD] Berendsen thermostat coupling time constant",
+            "min": 0.001,
+            "max": 10.0
+        },
+        "md_steps_per_frame": {
+            "value": 1,
+            "type": int,
+            "unit": "steps/frame",
+            "description": "[MD] MD steps per visualization frame",
+            "min": 1,
+            "max": 100
+        },
+
+        # ========================================================================
+        # OPT METHOD PARAMETERS
+        # ========================================================================
+        "opt_temperature": {
+            "value": 300.0,
+            "type": float,
+            "unit": "K",
+            "description": "[OPT] Temperature (for beta calculation, not actively used)",
+            "min": 1.0,
+            "max": 1000.0
+        },
+        "opt_max_steps": {
+            "value": 500,
+            "type": int,
+            "unit": "steps",
+            "description": "[OPT] Maximum optimization steps",
+            "min": 10,
+            "max": 10000
+        },
+        "opt_tolerance": {
+            "value": 1e-4,
+            "type": float,
+            "unit": "kcal/(mol·Å)",
+            "description": "[OPT] Convergence tolerance (force norm)",
+            "min": 1e-8,
+            "max": 1.0
+        },
+        "opt_alpha_init": {
+            "value": 0.05,
+            "type": float,
+            "unit": "Å",
+            "description": "[OPT] Initial step size for gradient descent",
+            "min": 0.001,
+            "max": 1.0
+        },
+        "opt_steps_per_frame": {
+            "value": 1,
+            "type": int,
+            "unit": "steps/frame",
+            "description": "[OPT] Optimization steps per visualization frame",
+            "min": 1,
+            "max": 100
+        }
+    }
+
     def construct(self):
         self.setup_parameters()
         self.setup_layout()
@@ -143,17 +407,47 @@ class PolymerSamplingComparison(Scene):
     # ========================================================================
 
     def setup_parameters(self):
-        """Lade Parameter basierend auf SAMPLING_METHOD"""
-        # Gemeinsame Parameter
-        for key, val in COMMON_PARAMS.items():
-            setattr(self, key, val)
+        """Extract parameters from central PARAMETERS dictionary"""
+        # General configuration
+        self.sampling_method = self.PARAMETERS["sampling_method"]["value"]
+        self.initial_config = self.PARAMETERS["initial_config"]["value"]
+        self.n_steps = self.PARAMETERS["n_steps"]["value"]
 
-        # Methoden-spezifisch
-        method_params = METHOD_PARAMS[SAMPLING_METHOD]
-        for key, val in method_params.items():
-            setattr(self, key, val)
+        # Common physics parameters
+        self.n_beads = self.PARAMETERS["n_beads"]["value"]
+        self.box_size = self.PARAMETERS["box_size"]["value"]
+        self.initial_spacing = self.PARAMETERS["initial_spacing"]["value"]
+        self.r0_bond = self.PARAMETERS["r0_bond"]["value"]
+        self.k_bond = self.PARAMETERS["k_bond"]["value"]
+        self.epsilon_lj = self.PARAMETERS["epsilon_lj"]["value"]
+        self.sigma_lj = self.PARAMETERS["sigma_lj"]["value"]
+        self.cutoff_lj = self.PARAMETERS["cutoff_lj"]["value"]
+        self.mass = self.PARAMETERS["mass"]["value"]
+        self.k_B = self.PARAMETERS["k_B"]["value"]
 
-        # Boltzmann constant für MC und MD
+        # Method-specific parameters (extract based on selected method)
+        if self.sampling_method == "MC":
+            self.temperature = self.PARAMETERS["mc_temperature"]["value"]
+            self.max_displacement = self.PARAMETERS["mc_max_displacement"]["value"]
+            self.steps_per_frame = self.PARAMETERS["mc_steps_per_frame"]["value"]
+        elif self.sampling_method == "NAIVE":
+            self.perturbation_strength = self.PARAMETERS["naive_perturbation_strength"]["value"]
+            self.opt_max_steps = self.PARAMETERS["naive_opt_max_steps"]["value"]
+            self.opt_tolerance = self.PARAMETERS["naive_opt_tolerance"]["value"]
+            self.steps_per_frame = self.PARAMETERS["naive_steps_per_frame"]["value"]
+        elif self.sampling_method == "MD":
+            self.dt = self.PARAMETERS["md_dt"]["value"]
+            self.temperature = self.PARAMETERS["md_temperature"]["value"]
+            self.berendsen_tau = self.PARAMETERS["md_berendsen_tau"]["value"]
+            self.steps_per_frame = self.PARAMETERS["md_steps_per_frame"]["value"]
+        elif self.sampling_method == "OPT":
+            self.temperature = self.PARAMETERS["opt_temperature"]["value"]
+            self.opt_max_steps = self.PARAMETERS["opt_max_steps"]["value"]
+            self.opt_tolerance = self.PARAMETERS["opt_tolerance"]["value"]
+            self.alpha_init = self.PARAMETERS["opt_alpha_init"]["value"]
+            self.steps_per_frame = self.PARAMETERS["opt_steps_per_frame"]["value"]
+
+        # Boltzmann constant for MC and MD
         self.beta = 1.0 / (self.k_B * self.temperature)
 
         # Konvertierung: kcal/mol → kcal/(mol·ps²)·Å² für MD
@@ -177,7 +471,7 @@ class PolymerSamplingComparison(Scene):
 
         # Visualisierungs-Throttle (je mehr Schritte, desto seltener updaten)
         # Ziel: ~200 Visualisierungen pro Lauf
-        self.vis_freq = max(1, N_STEPS // 2000)
+        self.vis_freq = max(1, self.n_steps // 2000)
 
         # Visual scaling
         self.visual_scale = 0.20
@@ -192,8 +486,8 @@ class PolymerSamplingComparison(Scene):
             self.bonded_pairs.add((j, i))  # Beide Richtungen
 
         print(f"\n{'='*70}")
-        print(f"Method: {SAMPLING_METHOD.upper()}")
-        print(f"Initial Config: {INITIAL_CONFIG}")
+        print(f"Method: {self.sampling_method.upper()}")
+        print(f"Initial Config: {self.initial_config}")
         print(f"Parameters loaded successfully")
         print(f"{'='*70}\n")
 
@@ -262,7 +556,7 @@ class PolymerSamplingComparison(Scene):
         y_step = max(10, (y_max - y_min) / 5)  # ~5 Ticks auf der y-Achse
 
         self.energy_axes = Axes(
-            x_range=[0, N_STEPS, max(1, N_STEPS // 10)],
+            x_range=[0, self.n_steps, max(1, self.n_steps // 10)],
             y_range=[y_min, y_max, y_step],
             width=5.5,
             height=2.5,
@@ -295,7 +589,7 @@ class PolymerSamplingComparison(Scene):
         y_step = max(1.0, y_max / 5)  # ~5 Ticks
 
         self.rg_axes = Axes(
-            x_range=[0, N_STEPS, max(1, N_STEPS // 10)],
+            x_range=[0, self.n_steps, max(1, self.n_steps // 10)],
             y_range=[y_min, y_max, y_step],
             width=5.5,
             height=2.0,
@@ -319,7 +613,7 @@ class PolymerSamplingComparison(Scene):
 
     def initialize_configuration(self):
         """Initialisiere Polymer-Konfiguration mit FESTER Topologie"""
-        if INITIAL_CONFIG == "LINEAR":
+        if self.initial_config == "LINEAR":
             self.bead_positions = np.zeros((self.n_beads, 2))
             direction = np.array([1.0, 1.0]) / np.sqrt(2.0)
             chain_length = (self.n_beads - 1) * self.initial_spacing
@@ -328,7 +622,7 @@ class PolymerSamplingComparison(Scene):
             for i in range(self.n_beads):
                 self.bead_positions[i] = start_pos + i * self.initial_spacing * direction
 
-        elif INITIAL_CONFIG == "RANDOM":
+        elif self.initial_config == "RANDOM":
             # Zufällige Positionen (uniform in Box)
             self.bead_positions = np.random.uniform(
                 -self.box_size / 2, self.box_size / 2,
@@ -349,7 +643,7 @@ class PolymerSamplingComparison(Scene):
         self.k_wall = 100.0  # kcal/(mol·Å²) - Federkonstante der Wand
 
         # Für MD: Initialgeschwindigkeiten (Maxwell-Boltzmann)
-        if SAMPLING_METHOD == "MD":
+        if self.sampling_method == "MD":
             sigma_v = np.sqrt(self.k_B * self.temperature / self.mass)  # Å/ps
             self.velocities = np.random.normal(0, sigma_v, size=(self.n_beads, 2))
         else:
@@ -565,15 +859,15 @@ class PolymerSamplingComparison(Scene):
 
     def run_simulation(self):
         """Dispatcher zu richtigem Sampling-Ansatz"""
-        print(f"Starting {SAMPLING_METHOD} sampling...")
+        print(f"Starting {self.sampling_method} sampling...")
 
-        if SAMPLING_METHOD == "MC":
+        if self.sampling_method == "MC":
             self._run_mc()
-        elif SAMPLING_METHOD == "NAIVE":
+        elif self.sampling_method == "NAIVE":
             self._run_naive()
-        elif SAMPLING_METHOD == "MD":
+        elif self.sampling_method == "MD":
             self._run_md()
-        elif SAMPLING_METHOD == "OPT":
+        elif self.sampling_method == "OPT":
             self._run_optimization()
 
         print(f"Finished!")
@@ -586,7 +880,7 @@ class PolymerSamplingComparison(Scene):
         """Pure Gradient Descent Optimization mit normalisierter Schrittweite"""
         print("Starting Pure Gradient Descent Optimization...")
 
-        for step in range(N_STEPS):
+        for step in range(self.n_steps):
             self.step = step + 1
 
             # Calculate forces
@@ -649,7 +943,7 @@ class PolymerSamplingComparison(Scene):
         """Naive Sampling + Geometry Optimization"""
         print("Starting Naive Sampling with Gradient Descent...")
 
-        for step in range(N_STEPS):
+        for step in range(self.n_steps):
             self.step = step + 1
 
             # 1. Random perturbation (ALL beads)
@@ -748,7 +1042,7 @@ class PolymerSamplingComparison(Scene):
         self.velocity_warning_threshold = 3.0  # Threshold for warnings
         self.enable_velocity_clamping = False  # Toggle for clamping
 
-        for step in range(N_STEPS):
+        for step in range(self.n_steps):
             # Multiple MD steps per frame
             for _ in range(self.steps_per_frame):
                 self.step += 1
@@ -802,7 +1096,7 @@ class PolymerSamplingComparison(Scene):
         n_accepted = 0
         n_rejected = 0
 
-        for step in range(N_STEPS):
+        for step in range(self.n_steps):
             self.step = step + 1
 
             # Select random bead (avoid endpoints)

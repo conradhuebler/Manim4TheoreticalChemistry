@@ -141,11 +141,29 @@ ENTANGLED_COLOR = PURPLE
 
 
 class QuantumNonLocality(Scene):
-    """Main scene showing quantum non-locality with particle-in-a-box"""
+    """Main scene showing quantum non-locality with particle-in-a-box.
+
+    GUI-compatible PARAMETERS structure for quantum non-locality animation.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # PHYSICAL PARAMETERS
+        # ========================================================================
+        "box_length": {
+            "value": np.pi,
+            "type": float,
+            "unit": "-",
+            "description": "Box length L for particle-in-a-box (0 to L)",
+            "min": 1.0,
+            "max": 10.0
+        }
+    }
 
     def construct(self):
-        # Box length
-        self.L = np.pi
+        # Extract parameters
+        self.L = self.PARAMETERS["box_length"]["value"]
 
         # Main title
         self.show_title()

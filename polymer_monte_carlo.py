@@ -316,6 +316,75 @@ ACTIVE_PRESET = "DEMO"  # Test mit beiden Potentialen + aktiviertem LJ
 
 
 class PolymerMonteCarlo(Scene):
+    """Polymer Monte Carlo simulation with configurable presets."""
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    # Note: This uses the preset system defined above (PARAMETER_PRESETS)
+    # The active preset is determined by ACTIVE_PRESET
+    PARAMETERS = {
+        "active_preset": {
+            "value": ACTIVE_PRESET,
+            "type": str,
+            "unit": "-",
+            "description": "Active parameter preset (DEMO, REALISTIC, SLOW, EDUCATIONAL, NO_LJ, NO_BONDS, BOTH, NONE)",
+            "min": "",
+            "max": ""
+        },
+        "steps": {
+            "value": 10000,
+            "type": int,
+            "unit": "MC steps",
+            "description": "Number of Monte Carlo steps to simulate",
+            "min": 100,
+            "max": 100000
+        },
+        # ========================================================================
+        # ANIMATION PHASE PARAMETERS
+        # ========================================================================
+        "phase1_steps": {
+            "value": 10,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 1 duration: Slow demo with Metropolis visualization",
+            "min": 5,
+            "max": 50
+        },
+        "phase1_wait": {
+            "value": 3.5,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 1 animation wait time per step",
+            "min": 0.5,
+            "max": 10.0
+        },
+        "phase2_steps": {
+            "value": 80,
+            "type": int,
+            "unit": "steps",
+            "description": "Phase 2 duration: Medium speed warmup",
+            "min": 20,
+            "max": 500
+        },
+        "phase2_wait": {
+            "value": 0.02,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 2 animation wait time per step",
+            "min": 0.001,
+            "max": 0.5
+        },
+        "phase3_wait": {
+            "value": 0.0001,
+            "type": float,
+            "unit": "s",
+            "description": "Phase 3 animation wait time per step (fast thermalization)",
+            "min": 0.00001,
+            "max": 0.01
+        }
+        # Note: Detailed parameters come from PARAMETER_PRESETS[active_preset]
+        # This allows preset switching while maintaining GUI compatibility
+    }
+
     def construct(self):
         # Setup
         self.setup_parameters()
@@ -334,17 +403,26 @@ class PolymerMonteCarlo(Scene):
 
     def setup_parameters(self):
         """Initialize all simulation parameters from active preset"""
-        # Load active preset
-        if ACTIVE_PRESET not in PARAMETER_PRESETS:
-            raise ValueError(f"Unknown preset: {ACTIVE_PRESET}. Choose from: {list(PARAMETER_PRESETS.keys())}")
+        # Extract from PARAMETERS dictionary
+        active_preset_name = self.PARAMETERS["active_preset"]["value"]
+        self.steps = self.PARAMETERS["steps"]["value"]
 
-        preset = PARAMETER_PRESETS[ACTIVE_PRESET]
+        # Animation phase parameters
+        self.phase1_steps = self.PARAMETERS["phase1_steps"]["value"]
+        self.phase1_wait = self.PARAMETERS["phase1_wait"]["value"]
+        self.phase2_steps = self.PARAMETERS["phase2_steps"]["value"]
+        self.phase2_wait = self.PARAMETERS["phase2_wait"]["value"]
+        self.phase3_wait = self.PARAMETERS["phase3_wait"]["value"]
+
+        # Load active preset
+        if active_preset_name not in PARAMETER_PRESETS:
+            raise ValueError(f"Unknown preset: {active_preset_name}. Choose from: {list(PARAMETER_PRESETS.keys())}")
+
+        preset = PARAMETER_PRESETS[active_preset_name]
         print(f"\n{'='*70}")
-        print(f"Loading preset: {ACTIVE_PRESET.upper()}")
+        print(f"Loading preset: {active_preset_name.upper()}")
         print(f"Description: {preset['description']}")
         print(f"{'='*70}\n")
-
-        self.steps = 10000
         # ====== POLYMER GEOMETRY ======
         geometry = preset["polymer_geometry"]
         self.n_beads = geometry["n_beads"]
@@ -896,8 +974,8 @@ class PolymerMonteCarlo(Scene):
 
     def run_simulation(self):
         """Run Monte Carlo simulation"""
-        # Phase 1: Slow demonstration with Metropolis visualization (20 steps)
-        for i in range(10):
+        # Phase 1: Slow demonstration with Metropolis visualization
+        for i in range(self.phase1_steps):
             self.mc_step += 1
 
             # Perform Monte Carlo move
@@ -908,7 +986,7 @@ class PolymerMonteCarlo(Scene):
 
             # Highlight bead being moved
             self.update_polymer_visual(highlight_bead=metro_data['bead_index'])
-            self.wait(3.5)
+            self.wait(self.phase1_wait)
 
             # Show result
             self.update_polymer_visual(
@@ -918,7 +996,7 @@ class PolymerMonteCarlo(Scene):
             self.update_energy_plot(metro_data['accepted'])
             self.update_statistics()
 
-            self.wait(3.5)
+            self.wait(self.phase1_wait)
 
             # Reset bead color
             self.update_polymer_visual()
@@ -928,8 +1006,8 @@ class PolymerMonteCarlo(Scene):
         self.debug_bond_lengths()
         print()
 
-        # Phase 2: Medium speed (80 steps) - still show Metropolis
-        for step_count in range(80):
+        # Phase 2: Medium speed - still show Metropolis
+        for step_count in range(self.phase2_steps):
             self.mc_step += 1
             metro_data = self.monte_carlo_move()
 
@@ -938,7 +1016,7 @@ class PolymerMonteCarlo(Scene):
             self.update_energy_plot(metro_data['accepted'])
             self.update_statistics()
 
-            self.wait(0.02)
+            self.wait(self.phase2_wait)
 
         # Debug after Phase 2
         print("\n=== DEBUG: After Phase 2 (100 steps total) ===")
@@ -957,7 +1035,7 @@ class PolymerMonteCarlo(Scene):
             self.update_energy_plot(metro_data['accepted'])
             self.update_statistics()
 
-            self.wait(0.0001)
+            self.wait(self.phase3_wait)
 
         # Debug after Phase 3
         print("\n=== DEBUG: After Phase 3 (1100 steps total) ===")

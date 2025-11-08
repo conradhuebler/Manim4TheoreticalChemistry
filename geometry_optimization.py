@@ -55,16 +55,110 @@ def get_string(key):
     return strings[LANGUAGE].get(key, key)
 
 class GeometryOptimizationImproved(Scene):
+    """Geometry optimization with modified Newton method.
+
+    GUI-compatible PARAMETERS structure for geometry optimization animation.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # PES DOMAIN
+        # ========================================================================
+        "x_min": {
+            "value": -3.0,
+            "type": float,
+            "unit": "-",
+            "description": "Minimum x coordinate for PES domain",
+            "min": -10.0,
+            "max": 0.0
+        },
+        "x_max": {
+            "value": 3.0,
+            "type": float,
+            "unit": "-",
+            "description": "Maximum x coordinate for PES domain",
+            "min": 0.0,
+            "max": 10.0
+        },
+
+        # ========================================================================
+        # CONVERGENCE CRITERIA
+        # ========================================================================
+        "convergence_threshold": {
+            "value": 5e-4,
+            "type": float,
+            "unit": "-",
+            "description": "Convergence threshold for gradient norm |g| < ε",
+            "min": 1e-6,
+            "max": 1e-2
+        },
+        "max_iterations": {
+            "value": 20,
+            "type": int,
+            "unit": "iterations",
+            "description": "Maximum number of optimization iterations",
+            "min": 5,
+            "max": 100
+        },
+
+        # ========================================================================
+        # OPTIMIZATION ROBUSTNESS PARAMETERS
+        # ========================================================================
+        "max_step_size": {
+            "value": 0.5,
+            "type": float,
+            "unit": "-",
+            "description": "Trust region radius (maximum step size)",
+            "min": 0.1,
+            "max": 2.0
+        },
+        "lm_lambda": {
+            "value": 1e-3,
+            "type": float,
+            "unit": "-",
+            "description": "Levenberg-Marquardt damping parameter",
+            "min": 1e-6,
+            "max": 1.0
+        },
+        "backtrack_alpha": {
+            "value": 0.3,
+            "type": float,
+            "unit": "-",
+            "description": "Backtracking step reduction factor",
+            "min": 0.1,
+            "max": 0.9
+        },
+        "backtrack_c": {
+            "value": 0.5,
+            "type": float,
+            "unit": "-",
+            "description": "Armijo condition parameter for line search",
+            "min": 0.01,
+            "max": 0.99
+        },
+        "max_backtrack_iter": {
+            "value": 10,
+            "type": int,
+            "unit": "iterations",
+            "description": "Maximum backtracking line search iterations",
+            "min": 1,
+            "max": 50
+        }
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.setup_parameters()
 
     def setup_parameters(self):
-        """Setup PES parameters"""
-        self.x_min = -3.0
-        self.x_max = 3.0
+        """Extract parameters from central PARAMETERS dictionary"""
+        # PES domain
+        self.x_min = self.PARAMETERS["x_min"]["value"]
+        self.x_max = self.PARAMETERS["x_max"]["value"]
 
-        # Complex PES: sum of Gaussians
+        # Complex PES: sum of Gaussians (hardcoded, not user-configurable)
+        # These define the specific shape of the potential energy surface
         self.pes_params = [
             {"A": -2.0, "x0": -1.5, "sigma": 0.3},   # Local minimum
             {"A": -3.0, "x0": 0.5, "sigma": 0.4},    # Global minimum
@@ -73,15 +167,16 @@ class GeometryOptimizationImproved(Scene):
             {"A": 0.8, "x0": 1.1, "sigma": 0.1},     # Barrier
         ]
 
-        self.convergence_threshold = 5e-4
-        self.max_iterations = 20
+        # Convergence criteria
+        self.convergence_threshold = self.PARAMETERS["convergence_threshold"]["value"]
+        self.max_iterations = self.PARAMETERS["max_iterations"]["value"]
 
         # Robustness parameters
-        self.max_step_size = 0.5  # Trust region radius
-        self.lm_lambda = 1e-3  # Levenberg-Marquardt damping
-        self.backtrack_alpha = 0.3  # Backtracking step reduction
-        self.backtrack_c = 0.5  # Armijo condition parameter
-        self.max_backtrack_iter = 10
+        self.max_step_size = self.PARAMETERS["max_step_size"]["value"]
+        self.lm_lambda = self.PARAMETERS["lm_lambda"]["value"]
+        self.backtrack_alpha = self.PARAMETERS["backtrack_alpha"]["value"]
+        self.backtrack_c = self.PARAMETERS["backtrack_c"]["value"]
+        self.max_backtrack_iter = self.PARAMETERS["max_backtrack_iter"]["value"]
 
     def pes_function(self, x):
         """Potential energy surface"""

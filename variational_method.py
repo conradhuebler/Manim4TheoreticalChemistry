@@ -47,7 +47,8 @@ def get_string(key):
 # Mathematical Helper Functions
 # ========================================
 
-# Physical constants (atomic units: ℏ = m = ω = 1)
+# Physical constants (atomic units: ℏ = m = ω = 1) - will be moved to PARAMETERS
+# Temporary module-level for compatibility with functions
 HBAR = 1.0
 MASS = 1.0
 OMEGA = 1.0
@@ -168,6 +169,90 @@ def energy_to_color(E, E0=0.5, threshold=0.2):
 # ========================================
 
 class VariationalMethod(Scene):
+    """Variational method for harmonic oscillator.
+
+    GUI-compatible PARAMETERS structure for variational method animation.
+    """
+
+    # ✅ Central parameter dictionary for GUI tool compatibility
+    PARAMETERS = {
+        # ========================================================================
+        # PHYSICAL CONSTANTS (atomic units)
+        # ========================================================================
+        "hbar": {
+            "value": 1.0,
+            "type": float,
+            "unit": "a.u.",
+            "description": "Reduced Planck constant (atomic units)",
+            "min": 0.1,
+            "max": 10.0
+        },
+        "mass": {
+            "value": 1.0,
+            "type": float,
+            "unit": "a.u.",
+            "description": "Particle mass (atomic units)",
+            "min": 0.1,
+            "max": 10.0
+        },
+        "omega": {
+            "value": 1.0,
+            "type": float,
+            "unit": "a.u.",
+            "description": "Angular frequency for harmonic oscillator",
+            "min": 0.1,
+            "max": 10.0
+        },
+
+        # ========================================================================
+        # VISUALIZATION PARAMETERS
+        # ========================================================================
+        "x_range_min": {
+            "value": -4.0,
+            "type": float,
+            "unit": "-",
+            "description": "Minimum x for wavefunction plot",
+            "min": -10.0,
+            "max": 0.0
+        },
+        "x_range_max": {
+            "value": 4.0,
+            "type": float,
+            "unit": "-",
+            "description": "Maximum x for wavefunction plot",
+            "min": 0.0,
+            "max": 10.0
+        },
+        "n_points": {
+            "value": 300,
+            "type": int,
+            "unit": "points",
+            "description": "Number of points for wavefunction discretization",
+            "min": 50,
+            "max": 1000
+        },
+
+        # ========================================================================
+        # ANIMATION PARAMETERS
+        # ========================================================================
+        "duration": {
+            "value": 10.0,
+            "type": float,
+            "unit": "s",
+            "description": "Total animation duration",
+            "min": 1.0,
+            "max": 60.0
+        },
+        "fps": {
+            "value": 30,
+            "type": int,
+            "unit": "frames/s",
+            "description": "Frames per second for animation",
+            "min": 10,
+            "max": 120
+        }
+    }
+
     def construct(self):
         self.setup_parameters()
         self.phase_1_introduction()
@@ -176,11 +261,27 @@ class VariationalMethod(Scene):
         self.wait(3)
 
     def setup_parameters(self):
-        """Setup all parameters"""
-        self.E0 = exact_energy(0)  # Ground state energy = 0.5
-        self.x_range = np.linspace(-4, 4, 300)
+        """Extract parameters from central PARAMETERS dictionary"""
+        # Update global constants (needed for module-level functions)
+        global HBAR, MASS, OMEGA
+        HBAR = self.PARAMETERS["hbar"]["value"]
+        MASS = self.PARAMETERS["mass"]["value"]
+        OMEGA = self.PARAMETERS["omega"]["value"]
 
-        # Layout positions
+        # Calculate exact ground state energy
+        self.E0 = exact_energy(0)  # Ground state energy = ℏω/2
+
+        # Visualization parameters
+        x_min = self.PARAMETERS["x_range_min"]["value"]
+        x_max = self.PARAMETERS["x_range_max"]["value"]
+        n_pts = self.PARAMETERS["n_points"]["value"]
+        self.x_range = np.linspace(x_min, x_max, n_pts)
+
+        # Animation parameters
+        self.duration = self.PARAMETERS["duration"]["value"]
+        self.fps = self.PARAMETERS["fps"]["value"]
+
+        # Layout positions (internal, not parameters)
         self.wavefunction_center = LEFT * 3.5
         self.energy_chart_center = RIGHT * 3.5 + UP * 1.0
         self.energy_plot_center = RIGHT * 3.5 + DOWN * 1.8
@@ -475,9 +576,7 @@ class VariationalMethod(Scene):
         delta_E_display.set_value(E_init - self.E0)
 
         # Animation loop: vary α from 0.3 to 3.0
-        duration = 10.0
-        fps = 30
-        frames = int(duration * fps)
+        frames = int(self.duration * self.fps)
 
         alpha_values = np.linspace(0.3, 3.0, frames)
 
@@ -514,7 +613,7 @@ class VariationalMethod(Scene):
             alpha_display.set_color(color)
             E_display.set_color(color)
 
-            self.wait(1/fps)
+            self.wait(1/self.fps)
 
         self.wait(3)
 
