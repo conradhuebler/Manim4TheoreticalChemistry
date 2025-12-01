@@ -59,7 +59,7 @@ class BondStretching(Scene):
     PARAMETERS = {
         # Physical parameters
         "k": {
-            "value": 300.0,
+            "value": 1000.0,
             "type": float,
             "unit": "kcal/(mol·Å²)",
             "description": "Force constant for harmonic potential (typical C-C single bond)",

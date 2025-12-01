@@ -70,7 +70,7 @@ class MetadynamicsVisualization(Scene):
     PARAMETERS = {
         # Particle count
         "n_particles": {
-            "value": 5,
+            "value": 10,
             "type": int,
             "unit": "-",
             "description": "Number of particles in simulation",

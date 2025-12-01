@@ -280,7 +280,7 @@ class PolarizationForceField(Scene):
     PARAMETERS = {
         # MD simulation parameters
         "n_environment_atoms": {
-            "value": 6,
+            "value": 3,
             "type": int,
             "unit": "-",
             "description": "Number of environment atoms around central atom",
